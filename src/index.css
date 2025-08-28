@@ -4,6 +4,13 @@
   --color-gray100: #F9FAFB;
   --color-gray900: #1F2937;
   --color-white: #FFFFFF;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
   line-height: 1.5;
   font-weight: 400;
 
