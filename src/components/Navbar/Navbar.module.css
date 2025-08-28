@@ -1,0 +1,38 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-gray100);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  font-size: var(--font-lg);
+  font-weight: bold;
+  color: var(--color-orange);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.button {
+  padding: 8px 16px;
+  font-size: var(--font-base);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.upload {
+  background-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+.auth {
+  background-color: var(--color-gray900);
+  color: var(--color-white);
+}
