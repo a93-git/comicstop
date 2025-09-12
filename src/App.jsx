@@ -6,6 +6,8 @@ import { Login } from './components/Login/Login'
 import { Signup } from './components/Signup/Signup'
 import { Dashboard } from './components/Dashboard/Dashboard'
 import { Upload } from './components/Upload/Upload'
+import { ComicReader } from './components/ComicReader/ComicReader'
+import { Terms } from './components/Terms/Terms'
 
 export default function App() {
   return (
@@ -17,6 +19,8 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upload" element={<Upload />} />
+          <Route path="/comic/:id" element={<ComicReader />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </Router>
     </ThemeProvider>
