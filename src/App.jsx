@@ -5,6 +5,7 @@ import { Home } from './components/Home/Home'
 import { Login } from './components/Login/Login'
 import { Signup } from './components/Signup/Signup'
 import { Dashboard } from './components/Dashboard/Dashboard'
+import { Upload } from './components/Upload/Upload'
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/upload" element={<Upload />} />
         </Routes>
       </Router>
     </ThemeProvider>

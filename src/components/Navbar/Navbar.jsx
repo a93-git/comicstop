@@ -20,8 +20,7 @@ export function Navbar({ showAuth = true, onLogout }) {
   }
 
   const handleUpload = () => {
-    // TODO: Implement upload functionality
-    alert('Upload functionality coming soon!')
+    navigate('/upload')
     setIsMobileMenuOpen(false)
   }
 
@@ -81,35 +80,37 @@ export function Navbar({ showAuth = true, onLogout }) {
       </button>
 
       {/* Mobile Menu */}
-      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
-        <button 
-          className={`${styles.mobileButton} ${styles.upload}`}
-          onClick={handleUpload}
-        >
-          Upload
-        </button>
-        <button
-          className={`${styles.mobileButton} ${styles.themeToggle}`}
-          onClick={toggleTheme}
-        >
-          {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
-        </button>
-        {showAuth ? (
+      {isMobileMenuOpen && (
+        <div className={`${styles.mobileMenu} ${styles.mobileMenuOpen}`}>
           <button 
-            className={`${styles.mobileButton} ${styles.auth}`}
-            onClick={handleSignUp}
+            className={`${styles.mobileButton} ${styles.upload}`}
+            onClick={handleUpload}
           >
-            Sign Up / Login
+            Upload
           </button>
-        ) : (
-          <button 
-            className={`${styles.mobileButton} ${styles.logout}`}
-            onClick={onLogout}
+          <button
+            className={`${styles.mobileButton} ${styles.themeToggle}`}
+            onClick={toggleTheme}
           >
-            Logout
+            {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
           </button>
-        )}
-      </div>
+          {showAuth ? (
+            <button 
+              className={`${styles.mobileButton} ${styles.auth}`}
+              onClick={handleSignUp}
+            >
+              Sign Up / Login
+            </button>
+          ) : (
+            <button 
+              className={`${styles.mobileButton} ${styles.logout}`}
+              onClick={onLogout}
+            >
+              Logout
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
