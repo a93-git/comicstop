@@ -1,10 +1,11 @@
 .container {
-  min-height: 100vh;
+  min-height: calc(100vh - 50px); /* Account for navbar height with buffer */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   background-color: var(--color-gray100);
+  box-sizing: border-box;
 }
 
 .formWrapper {
@@ -149,7 +150,10 @@
 
 @media (max-width: 640px) {
   .container {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
+    min-height: 100vh; /* Allow scrolling on mobile if needed */
+    align-items: flex-start; /* Align to top instead of center */
+    padding-top: var(--spacing-md);
   }
   
   .formWrapper {
@@ -162,5 +166,14 @@
   
   .title {
     font-size: 1.75rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .form {
+    gap: var(--spacing-sm); /* Reduce gap between form elements */
+  }
+
+  .formGroup {
+    gap: 4px; /* Reduce gap in form groups */
   }
 }
