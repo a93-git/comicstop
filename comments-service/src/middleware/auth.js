@@ -62,7 +62,7 @@ export const optionalAuth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, config.jwt.secret);
     req.user = decoded;
-  } catch (error) {
+  } catch {
     // Don't fail on invalid token, just set user to null
     req.user = null;
   }
