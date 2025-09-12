@@ -32,6 +32,7 @@ async function apiRequest(endpoint, options = {}) {
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: 'include', // Include cookies for authentication
     })
 
     if (!response.ok) {
@@ -245,6 +246,7 @@ export async function uploadComic(formData) {
       method: 'POST',
       headers: getAuthHeaders(),
       body: formData, // Don't set Content-Type for multipart/form-data
+      credentials: 'include', // Include cookies for authentication
     })
 
     if (!response.ok) {
