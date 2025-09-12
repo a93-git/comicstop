@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { ComicThumbnail } from '../ComicThumbnail/ComicThumbnail'
 import { config } from '../../config'
 import { fetchSections, fetchSectionComics } from '../../services/api'
+import { detailedSampleComics } from '../../data/sampleComics'
 import styles from './Home.module.css'
 
 export function Home() {
+  const navigate = useNavigate()
   const [sections, setSections] = useState([])
   const [sectionComics, setSectionComics] = useState({})
   const [loading, setLoading] = useState(true)
@@ -43,8 +46,17 @@ export function Home() {
   }, [])
 
   const handleComicClick = (comic) => {
-    // Placeholder for navigation to comic reader
-    alert(`Opening comic reader for: ${comic.title}`)
+    // Check if this is one of our detailed sample comics
+    const detailedComic = detailedSampleComics.find(dc => 
+      dc.title.toLowerCase().includes(comic.title.toLowerCase().replace(/ \((New|Popular|Action)\)/, ''))
+    )
+    
+    if (detailedComic) {
+      navigate(`/comic/${detailedComic.id}`)
+    } else {
+      // For basic sample comics, navigate to the first detailed comic as fallback
+      navigate(`/comic/${detailedSampleComics[0].id}`)
+    }
   }
 
   if (loading) {

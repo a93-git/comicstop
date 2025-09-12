@@ -1,0 +1,336 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import styles from './CommentsSection.module.css'
+
+export function CommentsSection({ chapterId, userToken }) {
+  const [comments, setComments] = useState([])
+  const [newComment, setNewComment] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sortBy, setSortBy] = useState('newest')
+  const [replyingTo, setReplyingTo] = useState(null)
+  const [replyText, setReplyText] = useState('')
+
+  const API_BASE = 'http://localhost:3002'
+
+  // Fetch comments for the chapter
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/comments/${chapterId}?sort=${sortBy}`)
+      if (response.data.success) {
+        setComments(response.data.data.comments)
+      }
+    } catch (error) {
+      console.warn('Failed to fetch comments, using fallback data:', error)
+      // Fallback sample comments for demonstration
+      setComments([
+        {
+          _id: 'sample1',
+          author: 'ComicFan2024',
+          text: 'Amazing storyline! Can\'t wait to see what happens next.',
+          createdAt: new Date().toISOString(),
+          likes: 5,
+          reactions: { '❤️': 2, '😮': 1 },
+          replies: []
+        },
+        {
+          _id: 'sample2',
+          author: 'GraphicNovelLover',
+          text: 'The character development in this chapter is incredible.',
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          likes: 3,
+          reactions: { '👍': 4, '❤️': 1 },
+          replies: [
+            {
+              _id: 'reply1',
+              author: 'StorytellerFan',
+              text: 'Totally agree! The dialogue feels so natural.',
+              createdAt: new Date(Date.now() - 43200000).toISOString(),
+              likes: 1
+            }
+          ]
+        }
+      ])
+    }
+  }
+
+  useEffect(() => {
+    fetchComments()
+  }, [chapterId, sortBy])
+
+  // Add a new comment
+  const addComment = async () => {
+    if (!newComment.trim()) return
+    
+    setLoading(true)
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(userToken && { 'Authorization': `Bearer ${userToken}` })
+      }
+      
+      const response = await axios.post(`${API_BASE}/comments/${chapterId}`, {
+        author: 'CurrentUser', // Get from your auth system
+        text: newComment
+      }, { headers })
+
+      if (response.data.success) {
+        setNewComment('')
+        fetchComments() // Refresh comments
+      }
+    } catch (error) {
+      console.warn('Failed to add comment, showing in UI anyway:', error)
+      // Add comment to local state for demonstration
+      const newCommentObj = {
+        _id: `local-${Date.now()}`,
+        author: 'CurrentUser',
+        text: newComment,
+        createdAt: new Date().toISOString(),
+        likes: 0,
+        reactions: {},
+        replies: []
+      }
+      setComments(prev => [newCommentObj, ...prev])
+      setNewComment('')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Like a comment
+  const likeComment = async (commentId) => {
+    try {
+      await axios.post(`${API_BASE}/comments/${commentId}/like`)
+      fetchComments() // Refresh to get updated likes
+    } catch (error) {
+      console.warn('Failed to like comment:', error)
+      // Update local state for demonstration
+      setComments(prev => prev.map(comment => 
+        comment._id === commentId 
+          ? { ...comment, likes: comment.likes + 1 }
+          : comment
+      ))
+    }
+  }
+
+  // Add reaction to comment
+  const addReaction = async (commentId, reaction) => {
+    try {
+      await axios.post(`${API_BASE}/comments/${commentId}/react`, { reaction })
+      fetchComments() // Refresh to get updated reactions
+    } catch (error) {
+      console.warn('Failed to add reaction:', error)
+      // Update local state for demonstration
+      setComments(prev => prev.map(comment => 
+        comment._id === commentId 
+          ? { 
+              ...comment, 
+              reactions: {
+                ...comment.reactions,
+                [reaction]: (comment.reactions[reaction] || 0) + 1
+              }
+            }
+          : comment
+      ))
+    }
+  }
+
+  // Reply to a comment
+  const addReply = async (commentId) => {
+    if (!replyText.trim()) return
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(userToken && { 'Authorization': `Bearer ${userToken}` })
+      }
+
+      await axios.post(`${API_BASE}/comments/${commentId}/reply`, {
+        author: 'CurrentUser',
+        text: replyText
+      }, { headers })
+
+      setReplyText('')
+      setReplyingTo(null)
+      fetchComments() // Refresh comments
+    } catch (error) {
+      console.warn('Failed to add reply:', error)
+      // Add reply to local state for demonstration
+      const newReply = {
+        _id: `reply-${Date.now()}`,
+        author: 'CurrentUser',
+        text: replyText,
+        createdAt: new Date().toISOString(),
+        likes: 0
+      }
+      
+      setComments(prev => prev.map(comment => 
+        comment._id === commentId 
+          ? { ...comment, replies: [...(comment.replies || []), newReply] }
+          : comment
+      ))
+      
+      setReplyText('')
+      setReplyingTo(null)
+    }
+  }
+
+  const handleKeyPress = (e, action, ...args) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      action(...args)
+    }
+  }
+
+  return (
+    <div className={styles.commentsSection}>
+      {/* Sort Controls */}
+      <div className={styles.controls}>
+        <div className={styles.sortControls}>
+          <label htmlFor="sort-select" className={styles.sortLabel}>Sort by:</label>
+          <select 
+            id="sort-select"
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            className={styles.sortSelect}
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="likes">Most Liked</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Add Comment */}
+      <div className={styles.addComment}>
+        <h4>Add a comment</h4>
+        <textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          onKeyPress={(e) => handleKeyPress(e, addComment)}
+          placeholder="Share your thoughts about this comic..."
+          rows={3}
+          className={styles.commentInput}
+          aria-label="Write a comment"
+        />
+        <button 
+          onClick={addComment} 
+          disabled={loading || !newComment.trim()}
+          className={styles.submitButton}
+        >
+          {loading ? 'Adding...' : 'Add Comment'}
+        </button>
+      </div>
+
+      {/* Comments List */}
+      <div className={styles.commentsList}>
+        {comments.length === 0 ? (
+          <div className={styles.noComments}>
+            No comments yet. Be the first to share your thoughts!
+          </div>
+        ) : (
+          comments.map(comment => (
+            <div key={comment._id} className={styles.comment}>
+              <div className={styles.commentHeader}>
+                <strong className={styles.commentAuthor}>{comment.author}</strong>
+                <span className={styles.commentDate}>
+                  {new Date(comment.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              
+              <div className={styles.commentText}>{comment.text}</div>
+              
+              <div className={styles.commentActions}>
+                <button 
+                  onClick={() => likeComment(comment._id)}
+                  className={styles.actionButton}
+                  aria-label={`Like comment by ${comment.author}`}
+                >
+                  👍 {comment.likes}
+                </button>
+                
+                {/* Reaction buttons */}
+                {['❤️', '😂', '😮'].map(reaction => (
+                  <button
+                    key={reaction}
+                    onClick={() => addReaction(comment._id, reaction)}
+                    className={styles.reactionButton}
+                    aria-label={`React with ${reaction}`}
+                  >
+                    {reaction} {comment.reactions?.[reaction] || 0}
+                  </button>
+                ))}
+
+                <button 
+                  onClick={() => setReplyingTo(comment._id)}
+                  className={styles.replyButton}
+                  aria-label={`Reply to ${comment.author}`}
+                >
+                  Reply
+                </button>
+              </div>
+
+              {/* Reply Form */}
+              {replyingTo === comment._id && (
+                <div className={styles.replyForm}>
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, addReply, comment._id)}
+                    placeholder="Write a reply..."
+                    rows={2}
+                    className={styles.replyInput}
+                    aria-label="Write a reply"
+                  />
+                  <div className={styles.replyActions}>
+                    <button 
+                      onClick={() => addReply(comment._id)}
+                      disabled={!replyText.trim()}
+                      className={styles.submitReplyButton}
+                    >
+                      Reply
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setReplyingTo(null)
+                        setReplyText('')
+                      }}
+                      className={styles.cancelButton}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Replies */}
+              {comment.replies && comment.replies.length > 0 && (
+                <div className={styles.replies}>
+                  {comment.replies.map(reply => (
+                    <div key={reply._id} className={styles.reply}>
+                      <div className={styles.commentHeader}>
+                        <strong className={styles.commentAuthor}>{reply.author}</strong>
+                        <span className={styles.commentDate}>
+                          {new Date(reply.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className={styles.commentText}>{reply.text}</div>
+                      <div className={styles.commentActions}>
+                        <button 
+                          onClick={() => likeComment(reply._id)}
+                          className={styles.actionButton}
+                          aria-label={`Like reply by ${reply.author}`}
+                        >
+                          👍 {reply.likes || 0}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
