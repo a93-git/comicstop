@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Navbar } from '../Navbar/Navbar'
 import { login } from '../../services/api'
 import styles from './Login.module.css'
 
@@ -71,10 +72,12 @@ export function Login() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.formWrapper}>
-        <h1 className={styles.title}>Welcome back to ComicStop</h1>
-        <p className={styles.subtitle}>Sign in to your account to continue</p>
+    <div>
+      <Navbar />
+      <div className={styles.container}>
+        <div className={styles.formWrapper}>
+          <h1 className={styles.title}>Welcome back to ComicStop</h1>
+          <p className={styles.subtitle}>Sign in to your account to continue</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {generalError && (
@@ -134,6 +137,7 @@ export function Login() {
           </button>
         </p>
       </div>
+    </div>
     </div>
   )
 }

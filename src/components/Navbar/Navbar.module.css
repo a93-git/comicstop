@@ -1,10 +1,15 @@
 .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md);
-  background-color: var(--color-gray100);
-  border-bottom: 1px solid #e5e7eb;
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .logo {
@@ -13,14 +18,17 @@
   color: var(--color-orange);
   cursor: pointer;
   transition: color 0.2s ease;
+  user-select: none;
 }
 
 .logo:hover {
-  color: #E55A1F;
+  color: var(--color-orange-hover);
 }
 
-.actions {
+/* Desktop Actions */
+.desktopActions {
   display: flex;
+  align-items: center;
   gap: var(--spacing-md);
 }
 
@@ -30,26 +38,210 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease, opacity 0.2s ease, transform 0.1s ease;
+  font-weight: 500;
+}
+
+.button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
 }
 
 .upload {
   background-color: var(--color-orange);
-  color: var(--color-white);
+  color: var(--color-bg-primary);
 }
 
 .auth {
-  background-color: var(--color-gray900);
-  color: var(--color-white);
+  background-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
 }
 
 .logout {
-  background-color: var(--color-gray900);
-  color: var(--color-white);
+  background-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
 }
 
-.upload:hover,
-.auth:hover,
-.logout:hover {
+.themeToggle {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.themeToggle:hover {
+  background-color: var(--color-bg-primary);
+}
+
+/* Mobile Menu Button */
+.mobileMenuButton {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 101;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  width: 24px;
+  height: 18px;
+  position: relative;
+}
+
+.hamburger span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: var(--color-text-primary);
+  border-radius: 1px;
+  transition: all 0.3s ease;
+  position: absolute;
+}
+
+.hamburger span:nth-child(1) {
+  top: 0;
+}
+
+.hamburger span:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.hamburger span:nth-child(3) {
+  bottom: 0;
+}
+
+/* Hamburger animation when open */
+.hamburgerOpen span:nth-child(1) {
+  transform: rotate(45deg);
+  top: 50%;
+  margin-top: -1px;
+}
+
+.hamburgerOpen span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburgerOpen span:nth-child(3) {
+  transform: rotate(-45deg);
+  bottom: 50%;
+  margin-bottom: -1px;
+}
+
+/* Mobile Menu */
+.mobileMenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: var(--color-bg-secondary);
+  border-left: 1px solid var(--color-border);
+  padding: 80px 20px 20px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 99;
+  box-shadow: -4px 0 12px var(--color-shadow);
+}
+
+.mobileMenuOpen {
+  transform: translateX(0);
+}
+
+.mobileMenuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 98;
+}
+
+.mobileButton {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  font-size: var(--font-base);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  font-weight: 500;
+  text-align: left;
+}
+
+.mobileButton.upload {
+  background-color: var(--color-orange);
+  color: var(--color-bg-primary);
+}
+
+.mobileButton.auth {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
+.mobileButton.logout {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
+.mobileButton.themeToggle {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.mobileButton:hover {
   opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .desktopActions {
+    display: none;
+  }
+
+  .mobileMenuButton {
+    display: block;
+  }
+
+  .mobileMenu {
+    display: block;
+  }
+
+  .logo {
+    font-size: var(--font-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: var(--spacing-sm);
+  }
+
+  .mobileMenu {
+    width: 100%;
+    right: 0;
+    border-left: none;
+    box-shadow: 0 -4px 12px var(--color-shadow);
+  }
 }
