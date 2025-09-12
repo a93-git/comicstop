@@ -55,7 +55,7 @@ export function CommentsSection({ chapterId, userToken }) {
 
   useEffect(() => {
     fetchComments()
-  }, [chapterId, sortBy])
+  }, [chapterId, sortBy]) // fetchComments is recreated on every render, so we don't include it
 
   // Add a new comment
   const addComment = async () => {

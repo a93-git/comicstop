@@ -1,0 +1,125 @@
+.container {
+  min-height: 100vh;
+  background-color: var(--color-gray50);
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.wrapper {
+  background: var(--color-white);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-gray900);
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+.lastUpdated {
+  text-align: center;
+  color: var(--color-gray600);
+  font-style: italic;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 2px solid var(--color-gray200);
+}
+
+.section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section h2 {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--color-orange);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-gray200);
+}
+
+.section p {
+  color: var(--color-gray700);
+  line-height: 1.7;
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-base);
+}
+
+.section ul {
+  margin: var(--spacing-md) 0;
+  padding-left: var(--spacing-lg);
+  color: var(--color-gray700);
+}
+
+.section li {
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.6;
+}
+
+.contact {
+  background: var(--color-gray50);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-orange);
+  margin-top: var(--spacing-md);
+}
+
+.contact p {
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-gray800);
+}
+
+.contact p:last-child {
+  margin-bottom: 0;
+}
+
+.contact strong {
+  color: var(--color-gray900);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content {
+    padding: var(--spacing-md);
+  }
+  
+  .wrapper {
+    padding: var(--spacing-lg);
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .section h2 {
+    font-size: var(--font-lg);
+  }
+  
+  .section ul {
+    padding-left: var(--spacing-md);
+  }
+}
+
+/* Print styles */
+@media print {
+  .container {
+    background: white;
+  }
+  
+  .wrapper {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .section {
+    break-inside: avoid;
+  }
+}
