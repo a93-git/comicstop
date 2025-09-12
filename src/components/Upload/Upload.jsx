@@ -36,12 +36,20 @@ export function Upload() {
   // Check authentication on component mount
   useEffect(() => {
     const checkAuth = async () => {
+      const token = localStorage.getItem('authToken')
+      if (!token) {
+        // No token, redirect immediately
+        navigate('/login')
+        return
+      }
+
       try {
         await getUserProfile()
         // User is authenticated, continue
       } catch (error) {
         console.log('User not authenticated:', error)
-        // Redirect to login page
+        // Remove invalid token and redirect to login page
+        localStorage.removeItem('authToken')
         navigate('/login')
         return
       }
