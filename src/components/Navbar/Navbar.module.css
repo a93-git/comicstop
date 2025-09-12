@@ -11,6 +11,12 @@
   font-size: var(--font-lg);
   font-weight: bold;
   color: var(--color-orange);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.logo:hover {
+  color: #E55A1F;
 }
 
 .actions {
@@ -35,4 +41,15 @@
 .auth {
   background-color: var(--color-gray900);
   color: var(--color-white);
+}
+
+.logout {
+  background-color: var(--color-gray900);
+  color: var(--color-white);
+}
+
+.upload:hover,
+.auth:hover,
+.logout:hover {
+  opacity: 0.9;
 }
