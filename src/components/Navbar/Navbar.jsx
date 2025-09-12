@@ -20,8 +20,7 @@ export function Navbar({ showAuth = true, onLogout }) {
   }
 
   const handleUpload = () => {
-    // TODO: Implement upload functionality
-    alert('Upload functionality coming soon!')
+    navigate('/upload')
     setIsMobileMenuOpen(false)
   }
 
