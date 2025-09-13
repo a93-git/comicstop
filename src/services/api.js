@@ -413,3 +413,232 @@ export async function isBookmarked(itemId, type) {
     return false
   }
 }
+
+/**
+ * Series management functions
+ */
+export async function createSeries(formData) {
+  try {
+    const url = `${config.apiBaseUrl}/api/series`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: formData, // FormData for file upload
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    if (data.success) {
+      return data.data.series
+    }
+    
+    throw new Error(data.message || 'Series creation failed')
+  } catch (error) {
+    console.error('Series creation failed:', error)
+    throw error
+  }
+}
+
+export async function getSeries(queryParams = {}) {
+  try {
+    const searchParams = new URLSearchParams(queryParams)
+    const data = await apiRequest(`/api/series?${searchParams}`)
+    
+    if (data.success) {
+      return data.data
+    }
+    
+    throw new Error(data.message || 'Failed to fetch series')
+  } catch (error) {
+    console.error('Get series failed:', error)
+    throw error
+  }
+}
+
+export async function getSeriesById(id) {
+  try {
+    const data = await apiRequest(`/api/series/${id}`)
+    
+    if (data.success) {
+      return data.data.series
+    }
+    
+    throw new Error(data.message || 'Series not found')
+  } catch (error) {
+    console.error('Get series by ID failed:', error)
+    throw error
+  }
+}
+
+export async function updateSeries(id, formData) {
+  try {
+    const url = `${config.apiBaseUrl}/api/series/${id}`
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: formData,
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    if (data.success) {
+      return data.data.series
+    }
+    
+    throw new Error(data.message || 'Series update failed')
+  } catch (error) {
+    console.error('Series update failed:', error)
+    throw error
+  }
+}
+
+export async function deleteSeries(id) {
+  try {
+    const data = await apiRequest(`/api/series/${id}`, { method: 'DELETE' })
+    
+    if (data.success) {
+      return data
+    }
+    
+    throw new Error(data.message || 'Series deletion failed')
+  } catch (error) {
+    console.error('Series deletion failed:', error)
+    throw error
+  }
+}
+
+export async function getMySeries() {
+  try {
+    const data = await apiRequest('/api/series/my/series')
+    
+    if (data.success) {
+      return data.data
+    }
+    
+    throw new Error(data.message || 'Failed to fetch creator series')
+  } catch (error) {
+    console.error('Get my series failed:', error)
+    throw error
+  }
+}
+
+/**
+ * Creator Profile management functions
+ */
+export async function getMyCreatorProfile() {
+  try {
+    const data = await apiRequest('/api/creator-profile/my')
+    
+    if (data.success) {
+      return data.data.profile
+    }
+    
+    throw new Error(data.message || 'Profile not found')
+  } catch (error) {
+    console.error('Get creator profile failed:', error)
+    throw error
+  }
+}
+
+export async function updateCreatorProfile(formData) {
+  try {
+    const url = `${config.apiBaseUrl}/api/creator-profile`
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: formData,
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    if (data.success) {
+      return data.data.profile
+    }
+    
+    throw new Error(data.message || 'Profile update failed')
+  } catch (error) {
+    console.error('Creator profile update failed:', error)
+    throw error
+  }
+}
+
+export async function getPublicCreatorProfile(userId) {
+  try {
+    const data = await apiRequest(`/api/creator-profile/${userId}/public`)
+    
+    if (data.success) {
+      return data.data.profile
+    }
+    
+    throw new Error(data.message || 'Profile not found')
+  } catch (error) {
+    console.error('Get public creator profile failed:', error)
+    throw error
+  }
+}
+
+/**
+ * Publishing workflow functions
+ */
+export async function publishComic(comicId) {
+  try {
+    const data = await apiRequest(`/api/comics/${comicId}/publish`, { method: 'POST' })
+    
+    if (data.success) {
+      return data.data.comic
+    }
+    
+    throw new Error(data.message || 'Publishing failed')
+  } catch (error) {
+    console.error('Publish comic failed:', error)
+    throw error
+  }
+}
+
+export async function scheduleComic(comicId, scheduledAt) {
+  try {
+    const data = await apiRequest(`/api/comics/${comicId}/schedule`, {
+      method: 'POST',
+      body: JSON.stringify({ scheduledAt }),
+    })
+    
+    if (data.success) {
+      return data.data.comic
+    }
+    
+    throw new Error(data.message || 'Scheduling failed')
+  } catch (error) {
+    console.error('Schedule comic failed:', error)
+    throw error
+  }
+}
+
+export async function draftComic(comicId) {
+  try {
+    const data = await apiRequest(`/api/comics/${comicId}/draft`, { method: 'POST' })
+    
+    if (data.success) {
+      return data.data.comic
+    }
+    
+    throw new Error(data.message || 'Draft failed')
+  } catch (error) {
+    console.error('Draft comic failed:', error)
+    throw error
+  }
+}

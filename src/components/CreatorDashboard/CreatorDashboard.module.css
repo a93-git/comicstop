@@ -1,0 +1,465 @@
+.container {
+  min-height: 100vh;
+  background-color: var(--color-gray50);
+}
+
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: var(--spacing-xl);
+  font-size: var(--font-lg);
+  color: var(--color-gray700);
+}
+
+.header {
+  background: var(--color-white);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-gray900);
+  margin: 0;
+}
+
+.profilePreview {
+  color: var(--color-gray600);
+  font-size: var(--font-lg);
+}
+
+.tabNavigation {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-sm);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-weight: 500;
+  color: var(--color-gray600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  background: var(--color-gray100);
+  color: var(--color-gray900);
+}
+
+.tab.active {
+  background: var(--color-orange);
+  color: white;
+}
+
+.content {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 600px;
+}
+
+/* Overview Styles */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.statCard {
+  background: var(--color-gray50);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 1px solid var(--color-gray200);
+}
+
+.statCard h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-base);
+  color: var(--color-gray600);
+  font-weight: 500;
+}
+
+.statNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-orange);
+}
+
+.quickActions h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-xl);
+  color: var(--color-gray900);
+}
+
+.actionButtons {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.primaryButton {
+  background: var(--color-orange);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.primaryButton:hover {
+  background: #E55A1F;
+}
+
+.secondaryButton {
+  background: var(--color-white);
+  color: var(--color-gray700);
+  border: 1px solid var(--color-gray300);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: var(--color-gray100);
+  border-color: var(--color-gray400);
+}
+
+.recentComics h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-xl);
+  color: var(--color-gray900);
+}
+
+.comicsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.comicCard {
+  position: relative;
+}
+
+.comicStatus {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  z-index: 2;
+}
+
+.statusBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.statusBadge.draft {
+  background: var(--color-gray200);
+  color: var(--color-gray700);
+}
+
+.statusBadge.scheduled {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.statusBadge.published {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.statusBadge.archived {
+  background: #FECACA;
+  color: #991B1B;
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-gray600);
+}
+
+.emptyState p {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-lg);
+}
+
+/* Series Styles */
+.seriesSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: var(--font-xl);
+  color: var(--color-gray900);
+}
+
+.seriesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.seriesCard {
+  border: 1px solid var(--color-gray200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.seriesCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.seriesCover {
+  height: 200px;
+  background: var(--color-gray100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.seriesCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderCover {
+  color: var(--color-gray400);
+  font-size: var(--font-lg);
+}
+
+.seriesInfo {
+  padding: var(--spacing-md);
+}
+
+.seriesInfo h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-lg);
+  color: var(--color-gray900);
+}
+
+.seriesInfo p {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-gray600);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.seriesMeta {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-sm);
+  color: var(--color-gray500);
+}
+
+/* Comics Table Styles */
+.comicsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.comicsTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-gray200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-gray50);
+  font-weight: 600;
+  color: var(--color-gray700);
+  border-bottom: 1px solid var(--color-gray200);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-gray100);
+  align-items: center;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background: var(--color-gray50);
+}
+
+.comicTitle {
+  font-weight: 500;
+  color: var(--color-gray900);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--color-orange);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.linkButton:hover {
+  color: #E55A1F;
+}
+
+/* Analytics Styles */
+.analyticsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.analyticsSection h3 {
+  margin: 0;
+  font-size: var(--font-xl);
+  color: var(--color-gray900);
+}
+
+.analyticsSection p {
+  color: var(--color-gray600);
+  font-style: italic;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.metricCard {
+  background: var(--color-gray50);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 1px solid var(--color-gray200);
+}
+
+.metricCard h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-base);
+  color: var(--color-gray600);
+  font-weight: 500;
+}
+
+.metricValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-orange);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .tabNavigation {
+    flex-wrap: wrap;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .tableRow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+  }
+
+  .comicsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .seriesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

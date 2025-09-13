@@ -56,6 +56,11 @@
   color: var(--color-bg-primary);
 }
 
+.creator {
+  background-color: #6366F1;
+  color: var(--color-bg-primary);
+}
+
 .auth {
   background-color: var(--color-text-primary);
   color: var(--color-bg-primary);

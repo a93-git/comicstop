@@ -9,6 +9,8 @@ import { Upload } from './components/Upload/Upload'
 import { ComicReader } from './components/ComicReader/ComicReader'
 import { Profile } from './components/Profile/Profile'
 import { Terms } from './components/Terms/Terms'
+import { CreatorDashboard } from './components/CreatorDashboard/CreatorDashboard'
+import { CreatorProfile } from './components/CreatorProfile/CreatorProfile'
 
 export default function App() {
   return (
@@ -23,6 +25,10 @@ export default function App() {
           <Route path="/comic/:id" element={<ComicReader />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/terms" element={<Terms />} />
+          
+          {/* Creator Routes */}
+          <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+          <Route path="/creator/profile" element={<CreatorProfile />} />
         </Routes>
       </Router>
     </ThemeProvider>
