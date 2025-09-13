@@ -24,6 +24,11 @@ export function Navbar({ showAuth = true, onLogout }) {
     setIsMobileMenuOpen(false)
   }
 
+  const handleCreatorDashboard = () => {
+    navigate('/creator/dashboard')
+    setIsMobileMenuOpen(false)
+  }
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
@@ -39,6 +44,12 @@ export function Navbar({ showAuth = true, onLogout }) {
           onClick={handleUpload}
         >
           Upload
+        </button>
+        <button 
+          className={`${styles.button} ${styles.creator}`}
+          onClick={handleCreatorDashboard}
+        >
+          Creator Hub
         </button>
         <button
           className={`${styles.button} ${styles.themeToggle}`}
