@@ -88,6 +88,31 @@ export const Comic = sequelize.define('Comic', {
     type: DataTypes.STRING(1000),
     allowNull: true,
   },
+  // Publishing and series information
+  publishStatus: {
+    type: DataTypes.ENUM('draft', 'scheduled', 'published', 'archived'),
+    defaultValue: 'draft',
+  },
+  publishedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  scheduledAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  chapterNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1,
+    },
+  },
+  // Version control
+  version: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+  },
   // Status and visibility
   isPublic: {
     type: DataTypes.BOOLEAN,
@@ -105,7 +130,7 @@ export const Comic = sequelize.define('Comic', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
-  // Foreign key to User
+  // Foreign keys
   uploaderId: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -115,6 +140,16 @@ export const Comic = sequelize.define('Comic', {
     },
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
+  },
+  seriesId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'series',
+      key: 'id',
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
   },
 }, {
   tableName: 'comics',

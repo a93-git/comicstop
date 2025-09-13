@@ -60,6 +60,7 @@ export class ComicService {
     const where = {
       isActive: true,
       isPublic: true,
+      publishStatus: 'published', // Only show published comics to public
     };
 
     // Add search conditions
@@ -226,6 +227,146 @@ export class ComicService {
 
     return {
       comics: rows,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: parseInt(limit),
+      },
+    };
+  }
+
+  /**
+   * Publish a comic
+   */
+  static async publishComic(id, userId) {
+    const comic = await Comic.findOne({
+      where: {
+        id,
+        isActive: true,
+        uploaderId: userId,
+      },
+    });
+
+    if (!comic) {
+      throw new Error('Comic not found or access denied');
+    }
+
+    await comic.update({
+      publishStatus: 'published',
+      publishedAt: new Date(),
+    });
+
+    return comic;
+  }
+
+  /**
+   * Schedule a comic for publishing
+   */
+  static async scheduleComic(id, scheduledAt, userId) {
+    const comic = await Comic.findOne({
+      where: {
+        id,
+        isActive: true,
+        uploaderId: userId,
+      },
+    });
+
+    if (!comic) {
+      throw new Error('Comic not found or access denied');
+    }
+
+    await comic.update({
+      publishStatus: 'scheduled',
+      scheduledAt: new Date(scheduledAt),
+    });
+
+    return comic;
+  }
+
+  /**
+   * Draft a comic (unpublish)
+   */
+  static async draftComic(id, userId) {
+    const comic = await Comic.findOne({
+      where: {
+        id,
+        isActive: true,
+        uploaderId: userId,
+      },
+    });
+
+    if (!comic) {
+      throw new Error('Comic not found or access denied');
+    }
+
+    await comic.update({
+      publishStatus: 'draft',
+      publishedAt: null,
+      scheduledAt: null,
+    });
+
+    return comic;
+  }
+
+  /**
+   * Archive a comic
+   */
+  static async archiveComic(id, userId) {
+    const comic = await Comic.findOne({
+      where: {
+        id,
+        isActive: true,
+        uploaderId: userId,
+      },
+    });
+
+    if (!comic) {
+      throw new Error('Comic not found or access denied');
+    }
+
+    await comic.update({
+      publishStatus: 'archived',
+    });
+
+    return comic;
+  }
+
+  /**
+   * Get comics by publish status for creator
+   */
+  static async getComicsByStatus(userId, status, query = {}) {
+    const {
+      page = 1,
+      limit = 20,
+      sort = 'createdAt',
+      order = 'DESC',
+    } = query;
+
+    const where = {
+      uploaderId: userId,
+      isActive: true,
+      publishStatus: status,
+    };
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows: comics } = await Comic.findAndCountAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: 'uploader',
+          attributes: ['id', 'username', 'firstName', 'lastName'],
+        },
+      ],
+      order: [[sort, order]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    return {
+      comics,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(count / limit),
