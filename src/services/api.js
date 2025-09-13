@@ -333,3 +333,83 @@ function getSampleComicsForSection(sectionId) {
       return sampleComics.slice(0, 2)
   }
 }
+
+/**
+ * Bookmark management functions
+ */
+export async function getBookmarks() {
+  try {
+    const response = await apiRequest(config.endpoints.bookmarks)
+    
+    if (response.success) {
+      return response.data.bookmarks || []
+    }
+    
+    throw new Error(response.message || 'Failed to get bookmarks')
+  } catch (error) {
+    console.warn('Failed to fetch bookmarks from API, using fallback data:', error)
+    
+    // Return sample bookmarks for development
+    return [
+      {
+        id: 1,
+        itemId: 1,
+        type: 'comic',
+        title: 'Mystic Guardians: The Awakening',
+        createdAt: new Date().toISOString()
+      }
+    ]
+  }
+}
+
+export async function addBookmark(itemId, type, metadata = {}) {
+  try {
+    const response = await apiRequest(config.endpoints.addBookmark, {
+      method: 'POST',
+      body: JSON.stringify({
+        itemId,
+        type, // 'series', 'comic', or 'page'
+        metadata // Additional data like page number, title, etc.
+      }),
+    })
+
+    if (response.success) {
+      return response.data.bookmark
+    }
+    
+    throw new Error(response.message || 'Failed to add bookmark')
+  } catch (error) {
+    console.error('Add bookmark failed:', error)
+    throw error
+  }
+}
+
+export async function removeBookmark(bookmarkId) {
+  try {
+    const endpoint = config.endpoints.removeBookmark.replace('{id}', bookmarkId)
+    const response = await apiRequest(endpoint, {
+      method: 'DELETE',
+    })
+
+    if (response.success) {
+      return true
+    }
+    
+    throw new Error(response.message || 'Failed to remove bookmark')
+  } catch (error) {
+    console.error('Remove bookmark failed:', error)
+    throw error
+  }
+}
+
+export async function isBookmarked(itemId, type) {
+  try {
+    const bookmarks = await getBookmarks()
+    return bookmarks.some(bookmark => 
+      bookmark.itemId === itemId && bookmark.type === type
+    )
+  } catch (error) {
+    console.error('Check bookmark status failed:', error)
+    return false
+  }
+}

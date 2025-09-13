@@ -19,6 +19,11 @@ export const config = {
         profile: "/auth/profile",
         logout: "/auth/logout",
         
+        // Bookmark endpoints
+        bookmarks: "/bookmarks",
+        addBookmark: "/bookmarks",
+        removeBookmark: "/bookmarks/{id}",
+        
         // Legacy endpoints (for backward compatibility)
         sections: "/comics", // Map sections to comics endpoint
         sectionComics: "/comics" // Map section comics to comics endpoint

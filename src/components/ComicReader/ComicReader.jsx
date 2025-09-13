@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { CommentsSection } from '../CommentsSection/CommentsSection'
 import { detailedSampleComics } from '../../data/sampleComics'
+import { useResponsive } from '../../hooks/useResponsive'
+import { useZoom } from '../../hooks/useZoom'
+import { useBookmark } from '../../hooks/useBookmark'
 import styles from './ComicReader.module.css'
 
 export function ComicReader() {
@@ -11,6 +14,16 @@ export function ComicReader() {
   const [comic, setComic] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [isDialoguesVisible, setIsDialoguesVisible] = useState(false)
+  
+  // Custom hooks for enhanced functionality
+  const { isDesktop, isMobile, isTouchDevice } = useResponsive()
+  const { zoom, resetZoom, handlers: zoomHandlers } = useZoom()
+  const { isBookmarked, toggleBookmark, loading: bookmarkLoading } = useBookmark(
+    comic?.id, 
+    'comic', 
+    { title: comic?.title, author: comic?.author }
+  )
 
   useEffect(() => {
     // Find the comic by ID
@@ -27,21 +40,49 @@ export function ComicReader() {
     setLoading(false)
   }, [id, navigate])
 
-  const handlePreviousPage = () => {
+  const handlePreviousPage = useCallback(() => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1)
     }
-  }
+  }, [currentPage])
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (currentPage < comic.pages.length) {
       setCurrentPage(currentPage + 1)
     }
-  }
+  }, [currentPage, comic?.pages?.length])
 
-  const handlePageClick = (pageNumber) => {
+  const handlePageClick = useCallback((pageNumber) => {
     setCurrentPage(pageNumber)
-  }
+  }, [])
+
+  // Desktop click navigation
+  const handleDesktopClick = useCallback((e) => {
+    if (!isDesktop) return
+    
+    const clickX = e.nativeEvent.offsetX
+    const width = e.currentTarget.offsetWidth
+    
+    if (clickX > width / 2 && currentPage < comic.pages.length) {
+      handleNextPage()
+    } else if (clickX <= width / 2 && currentPage > 1) {
+      handlePreviousPage()
+    }
+  }, [isDesktop, currentPage, comic?.pages?.length, handleNextPage, handlePreviousPage])
+
+  // Mobile tap-to-scroll
+  const handleMobileTap = useCallback((e) => {
+    if (!isMobile) return
+    
+    const clickY = e.nativeEvent.clientY
+    const height = window.innerHeight
+    
+    if (clickY > height / 2) {
+      window.scrollBy({ top: height / 2, behavior: 'smooth' })
+    } else {
+      window.scrollBy({ top: -height / 2, behavior: 'smooth' })
+    }
+  }, [isMobile])
 
   if (loading) {
     return (
@@ -70,13 +111,24 @@ export function ComicReader() {
       <div className={styles.content}>
         {/* Comic Header */}
         <div className={styles.header}>
-          <button 
-            onClick={() => navigate('/')} 
-            className={styles.backButton}
-            aria-label="Back to home"
-          >
-            ← Back to Comics
-          </button>
+          <div className={styles.headerTop}>
+            <button 
+              onClick={() => navigate('/')} 
+              className={styles.backButton}
+              aria-label="Back to home"
+            >
+              ← Back to Comics
+            </button>
+            
+            <button
+              onClick={toggleBookmark}
+              disabled={bookmarkLoading}
+              className={`${styles.bookmarkButton} ${isBookmarked ? styles.bookmarked : ''}`}
+              aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            >
+              {isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+            </button>
+          </div>
           
           <div className={styles.comicInfo}>
             <h1 className={styles.title}>{comic.title}</h1>
@@ -99,11 +151,11 @@ export function ComicReader() {
               className={styles.navButton}
               aria-label="Previous page"
             >
-              ← Previous
+              ← Prev
             </button>
             
             <span className={styles.pageInfo}>
-              Page {currentPage} of {comic.pages.length}
+              {currentPage} / {comic.pages.length}
             </span>
             
             <button 
@@ -118,7 +170,16 @@ export function ComicReader() {
 
           {/* Current Page */}
           <div className={styles.page}>
-            <div className={styles.illustration}>
+            <div 
+              className={styles.illustration}
+              onClick={isDesktop ? handleDesktopClick : isMobile ? handleMobileTap : undefined}
+              {...(isTouchDevice() ? zoomHandlers : {})}
+              style={{ 
+                transform: `scale(${zoom})`,
+                transformOrigin: 'center',
+                cursor: isDesktop ? 'pointer' : isMobile ? 'pointer' : 'default'
+              }}
+            >
               <div className={styles.illustrationPlaceholder}>
                 📖 Page {currentPage}
                 <div className={styles.illustrationDescription}>
@@ -127,31 +188,44 @@ export function ComicReader() {
               </div>
             </div>
             
-            <div className={styles.dialogues}>
-              {currentPageData.dialogues.map((dialogue, index) => (
-                <div key={index} className={styles.dialogue}>
-                  <span className={styles.character}>{dialogue.character}:</span>
-                  <span className={styles.text}>"{dialogue.text}"</span>
+            {/* Dialogues Control */}
+            <div className={styles.dialoguesControl}>
+              <button
+                onClick={() => setIsDialoguesVisible(!isDialoguesVisible)}
+                className={styles.dialoguesToggle}
+                aria-label={isDialoguesVisible ? 'Hide dialogues' : 'Show dialogues'}
+              >
+                {isDialoguesVisible ? 'Hide Dialogues' : 'Show Dialogues'}
+              </button>
+              
+              {/* Zoom Controls for touch devices */}
+              {isTouchDevice() && (
+                <div className={styles.zoomControls}>
+                  <span className={styles.zoomLevel}>{Math.round(zoom * 100)}%</span>
+                  <button 
+                    onClick={resetZoom}
+                    className={styles.resetZoomButton}
+                    aria-label="Reset zoom"
+                  >
+                    Reset Zoom
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
+            
+            {/* Collapsible Dialogues */}
+            {isDialoguesVisible && (
+              <div className={styles.dialogues}>
+                {currentPageData.dialogues.map((dialogue, index) => (
+                  <div key={index} className={styles.dialogue}>
+                    <span className={styles.character}>{dialogue.character}:</span>
+                    <span className={styles.text}>"{dialogue.text}"</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Page Thumbnails */}
-          <div className={styles.thumbnails}>
-            {comic.pages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => handlePageClick(index + 1)}
-                className={`${styles.thumbnail} ${
-                  currentPage === index + 1 ? styles.thumbnailActive : ''
-                }`}
-                aria-label={`Go to page ${index + 1}`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Comic Details */}
