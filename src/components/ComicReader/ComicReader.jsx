@@ -19,10 +19,20 @@ export function ComicReader() {
   // Custom hooks for enhanced functionality
   const { isDesktop, isMobile, isTouchDevice } = useResponsive()
   const { zoom, resetZoom, handlers: zoomHandlers } = useZoom()
-  const { isBookmarked, toggleBookmark, loading: bookmarkLoading } = useBookmark(
+  const { isBookmarked: isComicBookmarked, toggleBookmark: toggleComicBookmark, loading: bookmarkLoading } = useBookmark(
     comic?.id, 
     'comic', 
     { title: comic?.title, author: comic?.author }
+  )
+  const { isBookmarked: isPageBookmarked, toggleBookmark: togglePageBookmark, loading: pageBookmarkLoading } = useBookmark(
+    comic?.id,
+    'page',
+    { 
+      title: comic?.title, 
+      author: comic?.author, 
+      pageNumber: currentPage,
+      pageDescription: comic?.pages?.[currentPage - 1]?.illustration 
+    }
   )
 
   useEffect(() => {
@@ -51,10 +61,6 @@ export function ComicReader() {
       setCurrentPage(currentPage + 1)
     }
   }, [currentPage, comic?.pages?.length])
-
-  const handlePageClick = useCallback((pageNumber) => {
-    setCurrentPage(pageNumber)
-  }, [])
 
   // Desktop click navigation
   const handleDesktopClick = useCallback((e) => {
@@ -121,12 +127,12 @@ export function ComicReader() {
             </button>
             
             <button
-              onClick={toggleBookmark}
+              onClick={toggleComicBookmark}
               disabled={bookmarkLoading}
-              className={`${styles.bookmarkButton} ${isBookmarked ? styles.bookmarked : ''}`}
-              aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              className={`${styles.bookmarkButton} ${isComicBookmarked ? styles.bookmarked : ''}`}
+              aria-label={isComicBookmarked ? 'Remove bookmark' : 'Add bookmark'}
             >
-              {isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+              {isComicBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
             </button>
           </div>
           
@@ -198,19 +204,31 @@ export function ComicReader() {
                 {isDialoguesVisible ? 'Hide Dialogues' : 'Show Dialogues'}
               </button>
               
-              {/* Zoom Controls for touch devices */}
-              {isTouchDevice() && (
-                <div className={styles.zoomControls}>
-                  <span className={styles.zoomLevel}>{Math.round(zoom * 100)}%</span>
-                  <button 
-                    onClick={resetZoom}
-                    className={styles.resetZoomButton}
-                    aria-label="Reset zoom"
-                  >
-                    Reset Zoom
-                  </button>
-                </div>
-              )}
+              <div className={styles.controlsRight}>
+                {/* Page Bookmark */}
+                <button
+                  onClick={togglePageBookmark}
+                  disabled={pageBookmarkLoading}
+                  className={`${styles.pageBookmarkButton} ${isPageBookmarked ? styles.bookmarked : ''}`}
+                  aria-label={isPageBookmarked ? 'Remove page bookmark' : 'Bookmark this page'}
+                >
+                  {isPageBookmarked ? '📑 Page Saved' : '📄 Save Page'}
+                </button>
+                
+                {/* Zoom Controls for touch devices */}
+                {isTouchDevice() && (
+                  <div className={styles.zoomControls}>
+                    <span className={styles.zoomLevel}>{Math.round(zoom * 100)}%</span>
+                    <button 
+                      onClick={resetZoom}
+                      className={styles.resetZoomButton}
+                      aria-label="Reset zoom"
+                    >
+                      Reset Zoom
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Collapsible Dialogues */}

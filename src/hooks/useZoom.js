@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
 /**
  * Hook for managing pinch-to-zoom functionality on touch devices

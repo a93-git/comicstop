@@ -202,6 +202,12 @@
   border-bottom: 1px solid var(--color-gray200);
 }
 
+.controlsRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
 .dialoguesToggle {
   background: var(--color-orange);
   color: var(--color-white);
@@ -215,6 +221,33 @@
 
 .dialoguesToggle:hover {
   background: #E55A1F;
+}
+
+.pageBookmarkButton {
+  background: none;
+  border: 2px solid var(--color-gray300);
+  color: var(--color-gray700);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.pageBookmarkButton:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.pageBookmarkButton.bookmarked {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+.pageBookmarkButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .zoomControls {
@@ -377,8 +410,17 @@
     align-items: stretch;
   }
   
+  .controlsRight {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
   .dialoguesToggle {
     width: 100%;
+  }
+  
+  .pageBookmarkButton {
+    flex: 1;
   }
   
   .zoomControls {

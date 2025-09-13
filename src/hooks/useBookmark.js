@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { addBookmark, removeBookmark, isBookmarked } from '../services/api'
+import { addBookmark, isBookmarked } from '../services/api'
 
 /**
  * Hook for managing bookmark state for a specific item
