@@ -35,6 +35,9 @@ export function Upload() {
 
   // Check authentication on component mount
   useEffect(() => {
+    // Set page title
+    document.title = 'ComicStop – Upload'
+    
     const checkAuth = async () => {
       const token = localStorage.getItem('authToken')
       if (!token) {

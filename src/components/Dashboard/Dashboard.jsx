@@ -14,6 +14,9 @@ export function Dashboard() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    // Set page title
+    document.title = 'ComicStop – Dashboard'
+    
     async function loadData() {
       try {
         setLoading(true)

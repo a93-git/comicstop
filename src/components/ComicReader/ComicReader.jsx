@@ -41,6 +41,8 @@ export function ComicReader() {
     
     if (foundComic) {
       setComic(foundComic)
+      // Set dynamic page title
+      document.title = `ComicStop – ${foundComic.title}`
     } else {
       // Redirect to home if comic not found
       navigate('/')

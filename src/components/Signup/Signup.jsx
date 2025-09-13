@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { PaymentForm } from '../PaymentForm/PaymentForm'
@@ -18,6 +18,11 @@ export function Signup() {
   })
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [paymentData, setPaymentData] = useState(null) // eslint-disable-line no-unused-vars
+
+  // Set page title
+  useEffect(() => {
+    document.title = 'ComicStop – Sign Up'
+  }, [])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
