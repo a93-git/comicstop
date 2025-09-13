@@ -21,6 +21,13 @@
   margin-bottom: var(--spacing-lg);
 }
 
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
 .backButton {
   background: none;
   border: none;
@@ -35,6 +42,33 @@
 .backButton:hover {
   color: #E55A1F;
   text-decoration: underline;
+}
+
+.bookmarkButton {
+  background: none;
+  border: 2px solid var(--color-gray300);
+  color: var(--color-gray700);
+  font-size: var(--font-base);
+  cursor: pointer;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.bookmarkButton:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.bookmarkButton.bookmarked {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+.bookmarkButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .comicInfo {
@@ -128,6 +162,9 @@
 
 .illustration {
   margin-bottom: var(--spacing-md);
+  user-select: none;
+  overflow: hidden;
+  border-radius: var(--radius-md);
 }
 
 .illustrationPlaceholder {
@@ -156,6 +193,94 @@
   line-height: 1.5;
 }
 
+.dialoguesControl {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-gray200);
+}
+
+.controlsRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.dialoguesToggle {
+  background: var(--color-orange);
+  color: var(--color-white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-base);
+  transition: background-color 0.2s ease;
+}
+
+.dialoguesToggle:hover {
+  background: #E55A1F;
+}
+
+.pageBookmarkButton {
+  background: none;
+  border: 2px solid var(--color-gray300);
+  color: var(--color-gray700);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.pageBookmarkButton:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.pageBookmarkButton.bookmarked {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+.pageBookmarkButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-sm);
+  color: var(--color-gray600);
+}
+
+.zoomLevel {
+  background: var(--color-gray100);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.resetZoomButton {
+  background: none;
+  border: 1px solid var(--color-gray300);
+  color: var(--color-gray600);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-sm);
+  transition: all 0.2s ease;
+}
+
+.resetZoomButton:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
 .dialogues {
   display: flex;
   flex-direction: column;
@@ -178,38 +303,6 @@
 .text {
   color: var(--color-gray800);
   line-height: 1.5;
-}
-
-.thumbnails {
-  display: flex;
-  gap: var(--spacing-xs);
-  flex-wrap: wrap;
-  justify-content: center;
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-gray200);
-}
-
-.thumbnail {
-  background: var(--color-gray100);
-  border: 1px solid var(--color-gray300);
-  color: var(--color-gray700);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-sm);
-  transition: all 0.2s ease;
-  min-width: 32px;
-  height: 32px;
-}
-
-.thumbnail:hover {
-  background: var(--color-gray200);
-}
-
-.thumbnailActive {
-  background: var(--color-orange);
-  color: var(--color-white);
-  border-color: var(--color-orange);
 }
 
 .details {
@@ -285,6 +378,17 @@
     gap: var(--spacing-xs);
   }
   
+  .headerTop {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+  
+  .backButton, .bookmarkButton {
+    width: 100%;
+    text-align: center;
+  }
+  
   .pageNavigation {
     flex-direction: column;
     gap: var(--spacing-sm);
@@ -300,13 +404,26 @@
     padding: var(--spacing-lg);
   }
   
-  .thumbnails {
-    gap: var(--spacing-xs);
+  .dialoguesControl {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
   }
   
-  .thumbnail {
-    min-width: 28px;
-    height: 28px;
-    font-size: 12px;
+  .controlsRight {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
+  .dialoguesToggle {
+    width: 100%;
+  }
+  
+  .pageBookmarkButton {
+    flex: 1;
+  }
+  
+  .zoomControls {
+    justify-content: center;
   }
 }
