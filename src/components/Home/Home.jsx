@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { ComicThumbnail } from '../ComicThumbnail/ComicThumbnail'
-import { config } from '../../config'
 import { fetchSections, fetchSectionComics } from '../../services/api'
 import { detailedSampleComics } from '../../data/sampleComics'
 import styles from './Home.module.css'
@@ -13,6 +12,34 @@ export function Home() {
   const [sectionComics, setSectionComics] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredSections, setFilteredSections] = useState([])
+
+  // Set page title
+  useEffect(() => {
+    document.title = 'ComicStop'
+  }, [])
+
+  // Filter sections based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredSections(sections)
+      return
+    }
+
+    const query = searchQuery.toLowerCase()
+    const filtered = sections.map(section => {
+      const filteredComics = (sectionComics[section.id] || []).filter(comic =>
+        comic.title.toLowerCase().includes(query) ||
+        comic.author.toLowerCase().includes(query) ||
+        (comic.genre && comic.genre.toLowerCase().includes(query))
+      )
+      
+      return filteredComics.length > 0 ? { ...section, filteredComics } : null
+    }).filter(Boolean)
+
+    setFilteredSections(filtered)
+  }, [searchQuery, sections, sectionComics])
 
   useEffect(() => {
     async function loadData() {
@@ -34,6 +61,7 @@ export function Home() {
         )
         
         setSectionComics(comicsData)
+        setFilteredSections(sectionsData)
       } catch (err) {
         setError('Failed to load comic data')
         console.error('Error loading data:', err)
@@ -61,10 +89,14 @@ export function Home() {
 
   if (loading) {
     return (
-      <div>
+      <div className={styles.container}>
         <Navbar />
         <main className={styles.main}>
-          <h1>Welcome to {config.appName}</h1>
+          <div className={styles.intro}>
+            <p className={styles.introText}>
+              Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.
+            </p>
+          </div>
           <p>Loading your comic collection...</p>
         </main>
       </div>
@@ -73,10 +105,14 @@ export function Home() {
 
   if (error) {
     return (
-      <div>
+      <div className={styles.container}>
         <Navbar />
         <main className={styles.main}>
-          <h1>Welcome to {config.appName}</h1>
+          <div className={styles.intro}>
+            <p className={styles.introText}>
+              Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.
+            </p>
+          </div>
           <p>Error: {error}</p>
         </main>
       </div>
@@ -84,20 +120,43 @@ export function Home() {
   }
 
   return (
-    <div>
+    <div className={styles.container}>
       <Navbar />
       <main className={styles.main}>
-        <h1>Welcome to {config.appName}</h1>
-        <p>Start by uploading your PDF collection.</p>
+        <div className={styles.intro}>
+          <p className={styles.introText}>
+            Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.
+          </p>
+          
+          {/* Search Bar */}
+          <div className={styles.searchContainer}>
+            <input
+              type="text"
+              placeholder="Search by title, author, or genre..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className={styles.clearButton}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
         
-        {sections.map(section => (
+        {filteredSections.map(section => (
           <section key={section.id} className={styles.section}>
             <h2>{section.name}</h2>
             {section.description && (
               <p className={styles.sectionDescription}>{section.description}</p>
             )}
             <div className={styles.comicsGrid}>
-              {(sectionComics[section.id] || []).map(comic => (
+              {(section.filteredComics || sectionComics[section.id] || []).map(comic => (
                 <ComicThumbnail
                   key={comic.id}
                   imageUrl={comic.imageUrl}

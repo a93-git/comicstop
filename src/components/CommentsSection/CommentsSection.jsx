@@ -9,27 +9,45 @@ export function CommentsSection({ chapterId, userToken }) {
   const [sortBy, setSortBy] = useState('newest')
   const [replyingTo, setReplyingTo] = useState(null)
   const [replyText, setReplyText] = useState('')
+  const [userReactions, setUserReactions] = useState({}) // Track user's reactions per comment
 
   const API_BASE = 'http://localhost:3002'
+  const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢'] // Five emoji reactions
+
+  // Enhanced sorting function
+  const sortComments = (comments, sortBy) => {
+    return [...comments].sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt)
+        case 'likes':
+          return (b.likes || 0) - (a.likes || 0)
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt)
+      }
+    })
+  }
 
   // Fetch comments for the chapter
   const fetchComments = async () => {
     try {
       const response = await axios.get(`${API_BASE}/comments/${chapterId}?sort=${sortBy}`)
       if (response.data.success) {
-        setComments(response.data.data.comments)
+        const sortedComments = sortComments(response.data.data.comments, sortBy)
+        setComments(sortedComments)
       }
     } catch (error) {
       console.warn('Failed to fetch comments, using fallback data:', error)
       // Fallback sample comments for demonstration
-      setComments([
+      const fallbackComments = [
         {
           _id: 'sample1',
           author: 'ComicFan2024',
           text: 'Amazing storyline! Can\'t wait to see what happens next.',
           createdAt: new Date().toISOString(),
           likes: 5,
-          reactions: { '❤️': 2, '😮': 1 },
+          reactions: { '❤️': 2, '😮': 1, '👍': 3 },
           replies: []
         },
         {
@@ -38,7 +56,7 @@ export function CommentsSection({ chapterId, userToken }) {
           text: 'The character development in this chapter is incredible.',
           createdAt: new Date(Date.now() - 86400000).toISOString(),
           likes: 3,
-          reactions: { '👍': 4, '❤️': 1 },
+          reactions: { '👍': 4, '❤️': 1, '😂': 2 },
           replies: [
             {
               _id: 'reply1',
@@ -48,8 +66,20 @@ export function CommentsSection({ chapterId, userToken }) {
               likes: 1
             }
           ]
+        },
+        {
+          _id: 'sample3',
+          author: 'ArtEnthusiast',
+          text: 'The artwork in this issue is absolutely stunning. The color palette really brings the emotions to life.',
+          createdAt: new Date(Date.now() - 172800000).toISOString(),
+          likes: 8,
+          reactions: { '👍': 5, '❤️': 3, '😮': 2 },
+          replies: []
         }
-      ])
+      ]
+      
+      const sortedComments = sortComments(fallbackComments, sortBy)
+      setComments(sortedComments)
     }
   }
 
@@ -112,25 +142,48 @@ export function CommentsSection({ chapterId, userToken }) {
     }
   }
 
-  // Add reaction to comment
-  const addReaction = async (commentId, reaction) => {
+  // Enhanced reaction system
+  const toggleReaction = async (commentId, reaction) => {
+    const currentUserReaction = userReactions[commentId]
+    
     try {
-      await axios.post(`${API_BASE}/comments/${commentId}/react`, { reaction })
+      if (currentUserReaction === reaction) {
+        // Remove reaction if clicking same one
+        await axios.delete(`${API_BASE}/comments/${commentId}/reaction/${reaction}`)
+        setUserReactions(prev => ({ ...prev, [commentId]: null }))
+      } else {
+        // Add or change reaction
+        await axios.post(`${API_BASE}/comments/${commentId}/reaction`, { type: reaction })
+        setUserReactions(prev => ({ ...prev, [commentId]: reaction }))
+      }
       fetchComments() // Refresh to get updated reactions
     } catch (error) {
-      console.warn('Failed to add reaction:', error)
+      console.warn('Failed to update reaction:', error)
       // Update local state for demonstration
-      setComments(prev => prev.map(comment => 
-        comment._id === commentId 
-          ? { 
-              ...comment, 
-              reactions: {
-                ...comment.reactions,
-                [reaction]: (comment.reactions[reaction] || 0) + 1
-              }
+      setComments(prev => prev.map(comment => {
+        if (comment._id === commentId) {
+          const newReactions = { ...comment.reactions }
+          
+          // Remove old reaction if exists
+          if (currentUserReaction && newReactions[currentUserReaction]) {
+            newReactions[currentUserReaction] = Math.max(0, newReactions[currentUserReaction] - 1)
+            if (newReactions[currentUserReaction] === 0) {
+              delete newReactions[currentUserReaction]
             }
-          : comment
-      ))
+          }
+          
+          // Add new reaction if different or first time
+          if (currentUserReaction !== reaction) {
+            newReactions[reaction] = (newReactions[reaction] || 0) + 1
+            setUserReactions(prev => ({ ...prev, [commentId]: reaction }))
+          } else {
+            setUserReactions(prev => ({ ...prev, [commentId]: null }))
+          }
+          
+          return { ...comment, reactions: newReactions }
+        }
+        return comment
+      }))
     }
   }
 
@@ -193,10 +246,13 @@ export function CommentsSection({ chapterId, userToken }) {
             onChange={(e) => setSortBy(e.target.value)}
             className={styles.sortSelect}
           >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
             <option value="likes">Most Liked</option>
           </select>
+        </div>
+        <div className={styles.commentsCount}>
+          {comments.length} comment{comments.length !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -248,17 +304,26 @@ export function CommentsSection({ chapterId, userToken }) {
                   👍 {comment.likes}
                 </button>
                 
-                {/* Reaction buttons */}
-                {['❤️', '😂', '😮'].map(reaction => (
-                  <button
-                    key={reaction}
-                    onClick={() => addReaction(comment._id, reaction)}
-                    className={styles.reactionButton}
-                    aria-label={`React with ${reaction}`}
-                  >
-                    {reaction} {comment.reactions?.[reaction] || 0}
-                  </button>
-                ))}
+                {/* Enhanced Emoji Reaction buttons */}
+                <div className={styles.reactionsContainer}>
+                  {EMOJI_REACTIONS.map(reaction => {
+                    const count = comment.reactions?.[reaction] || 0
+                    const isUserReaction = userReactions[comment._id] === reaction
+                    
+                    return (
+                      <button
+                        key={reaction}
+                        onClick={() => toggleReaction(comment._id, reaction)}
+                        className={`${styles.reactionButton} ${isUserReaction ? styles.userReaction : ''}`}
+                        aria-label={`React with ${reaction}${count > 0 ? ` (${count})` : ''}`}
+                        title={`${reaction} ${count > 0 ? count : ''}`}
+                      >
+                        {reaction}
+                        {count > 0 && <span className={styles.reactionCount}>{count}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
 
                 <button 
                   onClick={() => setReplyingTo(comment._id)}

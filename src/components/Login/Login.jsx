@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { login } from '../../services/api'
@@ -15,6 +15,11 @@ export function Login() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
+  
+  // Set page title
+  useEffect(() => {
+    document.title = 'ComicStop – Login'
+  }, [])
   
   // Check if there's a success message from signup
   const successMessage = location.state?.message

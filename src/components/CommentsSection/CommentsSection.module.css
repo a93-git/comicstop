@@ -3,9 +3,12 @@
 }
 
 .controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: var(--spacing-lg);
   padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--color-gray200);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .sortControls {
@@ -14,18 +17,24 @@
   gap: var(--spacing-sm);
 }
 
+.commentsCount {
+  color: var(--color-text-secondary);
+  font-size: var(--font-sm);
+  font-weight: 500;
+}
+
 .sortLabel {
   font-weight: 500;
-  color: var(--color-gray700);
+  color: var(--color-text-secondary);
   font-size: var(--font-sm);
 }
 
 .sortSelect {
   padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--color-gray300);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-white);
-  color: var(--color-gray700);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font-size: var(--font-sm);
   cursor: pointer;
 }
@@ -146,14 +155,21 @@
   display: flex;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.reactionsContainer {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
 }
 
 .actionButton,
 .reactionButton,
 .replyButton {
   background: none;
-  border: 1px solid var(--color-gray300);
-  color: var(--color-gray600);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-sm);
   font-size: var(--font-sm);
@@ -167,8 +183,27 @@
 .actionButton:hover,
 .reactionButton:hover,
 .replyButton:hover {
-  background: var(--color-gray100);
-  border-color: var(--color-gray400);
+  background: var(--color-bg-secondary);
+  border-color: var(--color-orange);
+}
+
+.reactionButton {
+  position: relative;
+  min-width: 36px;
+  justify-content: center;
+  padding: 6px 8px;
+}
+
+.userReaction {
+  background: rgba(255, 107, 44, 0.1);
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.reactionCount {
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 2px;
 }
 
 .replyForm {
@@ -235,6 +270,12 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
   .commentHeader {
     flex-direction: column;
     align-items: flex-start;
@@ -246,11 +287,20 @@
     gap: var(--spacing-xs);
   }
   
+  .reactionsContainer {
+    gap: 2px;
+  }
+  
   .actionButton,
   .reactionButton,
   .replyButton {
     font-size: 12px;
     padding: 4px var(--spacing-xs);
+  }
+  
+  .reactionButton {
+    min-width: 32px;
+    padding: 4px 6px;
   }
   
   .replies {
