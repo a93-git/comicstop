@@ -1,6 +1,6 @@
 import express from 'express';
 import { SeriesController } from '../controllers/seriesController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.get('/', SeriesController.getSeries);
 router.get('/:id', SeriesController.getSeriesById);
 
 // Protected routes (require authentication)
-router.use(authenticateToken);
+router.use(requireAuth);
 
 // Creator routes
 router.post('/', upload.single('coverArt'), SeriesController.createSeries);

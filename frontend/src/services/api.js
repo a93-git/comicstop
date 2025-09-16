@@ -401,12 +401,13 @@ function getSampleComicsForSection(sectionId) {
 /**
  * Bookmark management functions
  */
-export async function getBookmarks() {
+export async function getBookmarks(queryParams = {}) {
   try {
-    const response = await apiRequest(config.endpoints.bookmarks)
+    const params = new URLSearchParams(queryParams)
+    const response = await apiRequest(`${config.endpoints.bookmarks}?${params.toString()}`)
     
     if (response.success) {
-      return response.data.bookmarks || []
+      return response.data
     }
     
     throw new Error(response.message || 'Failed to get bookmarks')
@@ -414,26 +415,34 @@ export async function getBookmarks() {
     console.warn('Failed to fetch bookmarks from API, using fallback data:', error)
     
     // Return sample bookmarks for development
-    return [
-      {
-        id: 1,
-        itemId: 1,
-        type: 'comic',
-        title: 'Mystic Guardians: The Awakening',
-        createdAt: new Date().toISOString()
+    return {
+      bookmarks: [
+        {
+          id: 1,
+          itemId: 1,
+          type: 'comic',
+          metadata: { title: 'Mystic Guardians: The Awakening' },
+          createdAt: new Date().toISOString()
+        }
+      ],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 1,
+        itemsPerPage: 20
       }
-    ]
+    }
   }
 }
 
-export async function addBookmark(itemId, type, metadata = {}) {
+export async function addBookmark(itemId, type = 'comic', metadata = {}) {
   try {
     const response = await apiRequest(config.endpoints.addBookmark, {
       method: 'POST',
       body: JSON.stringify({
         itemId,
-        type, // 'series', 'comic', or 'page'
-        metadata // Additional data like page number, title, etc.
+        type,
+        metadata
       }),
     })
 
@@ -466,12 +475,38 @@ export async function removeBookmark(bookmarkId) {
   }
 }
 
-export async function isBookmarked(itemId, type) {
+export async function toggleBookmark(itemId, type = 'comic', metadata = {}) {
   try {
-    const bookmarks = await getBookmarks()
-    return bookmarks.some(bookmark => 
-      bookmark.itemId === itemId && bookmark.type === type
-    )
+    const response = await apiRequest(config.endpoints.toggleBookmark, {
+      method: 'POST',
+      body: JSON.stringify({
+        itemId,
+        type,
+        metadata
+      }),
+    })
+
+    if (response.success) {
+      return response.data
+    }
+    
+    throw new Error(response.message || 'Failed to toggle bookmark')
+  } catch (error) {
+    console.error('Toggle bookmark failed:', error)
+    throw error
+  }
+}
+
+export async function isBookmarked(itemId, type = 'comic') {
+  try {
+    const params = new URLSearchParams({ itemId, type })
+    const response = await apiRequest(`${config.endpoints.checkBookmark}?${params.toString()}`)
+    
+    if (response.success) {
+      return response.data.bookmarked
+    }
+    
+    return false
   } catch (error) {
     console.error('Check bookmark status failed:', error)
     return false

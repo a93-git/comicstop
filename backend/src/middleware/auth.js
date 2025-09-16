@@ -78,3 +78,9 @@ export const optionalAuth = async (req, res, next) => {
     next();
   }
 };
+
+/**
+ * Alias for authenticateToken middleware for clarity in protected routes
+ * Redirects to login when authentication fails
+ */
+export const requireAuth = authenticateToken;

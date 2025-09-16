@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { BookmarkIcon } from '../BookmarkIcon/BookmarkIcon'
 import styles from './ComicThumbnail.module.css'
 
 export function ComicThumbnail({ 
+  id,
   imageUrl, 
   title, 
   author, 
@@ -30,6 +32,17 @@ export function ComicThumbnail({
           alt={`${title} cover`}
           className={styles.image}
         />
+        
+        {/* Bookmark Icon - Always visible */}
+        <div className={styles.bookmarkContainer}>
+          <BookmarkIcon
+            itemId={id}
+            type="comic"
+            metadata={{ title, author }}
+            size="lg"
+            className={styles.bookmarkIcon}
+          />
+        </div>
         
         {isHovered && (
           <div className={styles.overlay}>

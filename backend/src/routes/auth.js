@@ -1,7 +1,7 @@
 import express from 'express';
 import { AuthController } from '../controllers/authController.js';
 import { validate, authSchemas } from '../middleware/validation.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { AuthService } from '../services/authService.js';
 
 const router = express.Router();
@@ -160,7 +160,7 @@ router.post('/login', validate(authSchemas.login), AuthController.login);
  *       401:
  *         description: Unauthorized
  */
-router.get('/profile', authenticateToken, AuthController.profile);
+router.get('/profile', requireAuth, AuthController.profile);
 
 /**
  * @swagger
@@ -174,10 +174,10 @@ router.get('/profile', authenticateToken, AuthController.profile);
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', authenticateToken, AuthController.logout);
+router.post('/logout', requireAuth, AuthController.logout);
 
 // Email verification (local/dev-friendly)
-router.post('/verify-email', authenticateToken, async (req, res) => {
+router.post('/verify-email', requireAuth, async (req, res) => {
 	try {
 		const user = await AuthService.setEmailVerified(req.user.id)
 		res.json({ success: true, data: { user } })
@@ -187,7 +187,7 @@ router.post('/verify-email', authenticateToken, async (req, res) => {
 })
 
 // Enable/disable creator mode
-router.post('/creator-mode', authenticateToken, async (req, res) => {
+router.post('/creator-mode', requireAuth, async (req, res) => {
 	try {
 		const { enable } = req.body
 		const user = await AuthService.setCreator(req.user.id, enable !== false)
@@ -198,7 +198,7 @@ router.post('/creator-mode', authenticateToken, async (req, res) => {
 })
 
 // Delete account
-router.delete('/me', authenticateToken, async (req, res) => {
+router.delete('/me', requireAuth, async (req, res) => {
 	try {
 		await AuthService.deleteAccount(req.user.id)
 		res.json({ success: true, message: 'Account deleted' })
