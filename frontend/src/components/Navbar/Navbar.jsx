@@ -62,7 +62,7 @@ export function Navbar() {
   }
 
   const handleSettings = () => {
-    navigate('/profile') // For now, settings are part of profile
+    navigate('/settings')
     setIsUserMenuOpen(false)
     setIsMobileMenuOpen(false)
   }
