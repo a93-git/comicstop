@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
+// Load .env.local to override defaults in local development if present
+try { dotenv.config({ path: '.env.local' }) } catch {}
 
 export const config = {
   // Server Configuration
@@ -10,12 +12,14 @@ export const config = {
   
   // Database Configuration
   database: {
+    dialect: (process.env.DB_DIALECT || 'postgres').toLowerCase(),
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 5432,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
     name: process.env.DB_NAME || 'comicstop',
     username: process.env.DB_USER || 'comicstop_user',
     password: process.env.DB_PASSWORD || '',
-    dialect: 'postgres',
+    // For sqlite only
+    storage: process.env.DB_STORAGE || new URL('../../dev.sqlite', import.meta.url).pathname,
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
   },
   

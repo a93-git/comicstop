@@ -2,6 +2,7 @@ import express from 'express';
 import { AuthController } from '../controllers/authController.js';
 import { validate, authSchemas } from '../middleware/validation.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { AuthService } from '../services/authService.js';
 
 const router = express.Router();
 
@@ -174,5 +175,36 @@ router.get('/profile', authenticateToken, AuthController.profile);
  *         description: Logout successful
  */
 router.post('/logout', authenticateToken, AuthController.logout);
+
+// Email verification (local/dev-friendly)
+router.post('/verify-email', authenticateToken, async (req, res) => {
+	try {
+		const user = await AuthService.setEmailVerified(req.user.id)
+		res.json({ success: true, data: { user } })
+	} catch (e) {
+		res.status(400).json({ success: false, message: e.message })
+	}
+})
+
+// Enable/disable creator mode
+router.post('/creator-mode', authenticateToken, async (req, res) => {
+	try {
+		const { enable } = req.body
+		const user = await AuthService.setCreator(req.user.id, enable !== false)
+		res.json({ success: true, data: { user } })
+	} catch (e) {
+		res.status(400).json({ success: false, message: e.message })
+	}
+})
+
+// Delete account
+router.delete('/me', authenticateToken, async (req, res) => {
+	try {
+		await AuthService.deleteAccount(req.user.id)
+		res.json({ success: true, message: 'Account deleted' })
+	} catch (e) {
+		res.status(400).json({ success: false, message: e.message })
+	}
+})
 
 export default router;

@@ -47,6 +47,15 @@ export const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  // Role/flags
+  isCreator: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  isEmailVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   lastLoginAt: {
     type: DataTypes.DATE,
     allowNull: true,

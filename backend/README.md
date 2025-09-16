@@ -193,7 +193,3 @@ npm run lint
 4. Use a secure JWT secret
 5. Configure rate limiting and CORS for production URLs
 6. Set up process manager (PM2, Docker, etc.)
-
-## License
-
-MIT

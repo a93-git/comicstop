@@ -1,5 +1,23 @@
 // API service for fetching comic sections and data
 import { config } from '../config.js'
+
+// Simple loading state pub/sub for global spinner
+let loadingCount = 0
+const loadingSubscribers = new Set()
+
+function notifyLoading() {
+  const isLoading = loadingCount > 0
+  loadingSubscribers.forEach(cb => {
+    try { cb(isLoading) } catch {}
+  })
+}
+
+export function subscribeLoading(cb) {
+  loadingSubscribers.add(cb)
+  // Initial push
+  try { cb(loadingCount > 0) } catch {}
+  return () => loadingSubscribers.delete(cb)
+}
 import { sampleComics } from '../data/sampleComics.js'
 
 /**
@@ -29,6 +47,8 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   try {
+    loadingCount++
+    notifyLoading()
     const response = await fetch(url, {
       ...options,
       headers,
@@ -44,6 +64,10 @@ async function apiRequest(endpoint, options = {}) {
   } catch (error) {
     console.error('API request failed:', error)
     throw error
+  }
+  finally {
+    loadingCount = Math.max(0, loadingCount - 1)
+    notifyLoading()
   }
 }
 
@@ -198,6 +222,10 @@ export async function login(credentials) {
 
     if (response.success && response.data.token) {
       localStorage.setItem('authToken', response.data.token)
+      // Store a minimal user snapshot if provided
+      if (response.data.user) {
+        localStorage.setItem('currentUser', JSON.stringify(response.data.user))
+      }
       return response.data
     }
     
@@ -210,31 +238,67 @@ export async function login(credentials) {
 
 export async function logout() {
   try {
-    await apiRequest(config.endpoints.logout, {
-      method: 'POST',
-    })
-  } catch (error) {
-    console.warn('Logout API call failed:', error)
-  } finally {
-    // Always remove token from localStorage
-    localStorage.removeItem('authToken')
-  }
+    await apiRequest(config.endpoints.logout, { method: 'POST' })
+  } catch {}
+  localStorage.removeItem('authToken')
+  localStorage.removeItem('currentUser')
 }
 
 export async function getUserProfile() {
   try {
-    const response = await apiRequest(config.endpoints.profile)
-    
-    if (response.success) {
-      return response.data.user
+    const res = await apiRequest(config.endpoints.profile)
+    if (res.success && res.data?.user) {
+      localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+      return res.data.user
     }
-    
-    throw new Error(response.message || 'Failed to get profile')
-  } catch (error) {
-    console.error('Get profile failed:', error)
-    throw error
+  } catch {}
+  return getCurrentUser() || { username: 'Guest', email: 'guest@example.com', joinDate: new Date().toISOString() }
+}
+
+export async function verifyEmail() {
+  const res = await apiRequest('/auth/verify-email', { method: 'POST' })
+  if (res.success && res.data?.user) {
+    localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+  }
+  return res
+}
+
+export async function setCreatorMode(enable = true) {
+  const res = await apiRequest('/auth/creator-mode', { method: 'POST', body: JSON.stringify({ enable }) })
+  if (res.success && res.data?.user) {
+    localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+  }
+  return res
+}
+
+export async function deleteMyAccount() {
+  const res = await apiRequest('/auth/me', { method: 'DELETE' })
+  if (res.success) {
+    await logout()
+  }
+  return res
+}
+
+/**
+ * Get current user from localStorage
+ */
+export function getCurrentUser() {
+  try {
+    const str = localStorage.getItem('currentUser')
+    return str ? JSON.parse(str) : null
+  } catch {
+    return null
   }
 }
+
+/**
+ * Check if current user is a creator
+ */
+export function isCreatorUser() {
+  const user = getCurrentUser()
+  return Boolean(user?.isCreator)
+}
+
 
 /**
  * Comic management functions

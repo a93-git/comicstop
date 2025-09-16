@@ -2,23 +2,30 @@ import { Sequelize } from 'sequelize';
 import { config } from '../config/index.js';
 
 // Initialize Sequelize instance
-const sequelize = new Sequelize(
-  config.database.name,
-  config.database.username,
-  config.database.password,
-  {
-    host: config.database.host,
-    port: config.database.port,
-    dialect: config.database.dialect,
-    logging: config.database.logging,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000,
-    },
-  }
-);
+const isSqlite = config.database.dialect === 'sqlite';
+const sequelize = isSqlite
+  ? new Sequelize({
+      dialect: 'sqlite',
+      storage: config.database.storage,
+      logging: config.database.logging,
+    })
+  : new Sequelize(
+      config.database.name,
+      config.database.username,
+      config.database.password,
+      {
+        host: config.database.host,
+        port: config.database.port,
+        dialect: config.database.dialect,
+        logging: config.database.logging,
+        pool: {
+          max: 5,
+          min: 0,
+          acquire: 30000,
+          idle: 10000,
+        },
+      }
+    );
 
 /**
  * Test database connection

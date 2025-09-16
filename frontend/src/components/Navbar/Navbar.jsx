@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useThemeContext } from '../../hooks/useThemeContext'
+import { isCreatorUser } from '../../services/api'
 import styles from './Navbar.module.css'
 import { config } from '../../config'
 
@@ -20,12 +21,20 @@ export function Navbar({ showAuth = true, onLogout }) {
   }
 
   const handleUpload = () => {
-    navigate('/upload')
+    if (isCreatorUser()) {
+      navigate('/upload')
+    } else {
+      navigate('/signup')
+    }
     setIsMobileMenuOpen(false)
   }
 
   const handleCreatorDashboard = () => {
-    navigate('/creator/dashboard')
+    if (isCreatorUser()) {
+      navigate('/creator/dashboard')
+    } else {
+      navigate('/signup')
+    }
     setIsMobileMenuOpen(false)
   }
 
@@ -39,18 +48,8 @@ export function Navbar({ showAuth = true, onLogout }) {
       
       {/* Desktop Actions */}
       <div className={styles.desktopActions}>
-        <button 
-          className={`${styles.button} ${styles.upload}`}
-          onClick={handleUpload}
-        >
-          Upload
-        </button>
-        <button 
-          className={`${styles.button} ${styles.creator}`}
-          onClick={handleCreatorDashboard}
-        >
-          Creator Hub
-        </button>
+        <button className={`${styles.button} ${styles.upload}`} onClick={handleUpload}>Upload</button>
+        <button className={`${styles.button} ${styles.creator}`} onClick={handleCreatorDashboard}>Creator Hub</button>
         <button
           className={`${styles.button} ${styles.themeToggle}`}
           onClick={toggleTheme}

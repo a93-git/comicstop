@@ -104,4 +104,34 @@ export class AuthService {
 
     return user;
   }
+
+  /**
+   * Set email verified flag for the user
+   */
+  static async setEmailVerified(userId) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+    await user.update({ isEmailVerified: true });
+    return user;
+  }
+
+  /**
+   * Enable creator mode
+   */
+  static async setCreator(userId, isCreator = true) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+    await user.update({ isCreator });
+    return user;
+  }
+
+  /**
+   * Delete current user account
+   */
+  static async deleteAccount(userId) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+    await user.destroy();
+    return true;
+  }
 }

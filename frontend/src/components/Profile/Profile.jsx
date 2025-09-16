@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { ComicThumbnail } from '../ComicThumbnail/ComicThumbnail'
-import { getBookmarks, removeBookmark, getUserProfile } from '../../services/api'
+import { getBookmarks, removeBookmark, getUserProfile, setCreatorMode, deleteMyAccount } from '../../services/api'
 import styles from './Profile.module.css'
 
 export function Profile() {
@@ -66,6 +66,27 @@ export function Profile() {
     // Clear localStorage and navigate to home
     localStorage.removeItem('authToken')
     navigate('/')
+  }
+
+  const handleEnableCreator = async () => {
+    try {
+      await setCreatorMode(true)
+      const updated = await getUserProfile()
+      setUser(updated)
+      alert('Creator mode enabled')
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return
+    try {
+      await deleteMyAccount()
+      navigate('/')
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   if (loading) {
@@ -227,6 +248,21 @@ export function Profile() {
                       <input type="checkbox" className={styles.checkbox} />
                       Enable click navigation
                     </label>
+                  </div>
+
+                  <div className={styles.settingItem}>
+                    <h4 className={styles.settingTitle}>Account Actions</h4>
+                    <p className={styles.settingDescription}>Manage important account actions</p>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      {!user.isCreator && (
+                        <button className={styles.readButton} onClick={handleEnableCreator}>
+                          Enable Creator Mode
+                        </button>
+                      )}
+                      <button className={styles.removeButton} onClick={handleDeleteAccount}>
+                        Delete Account
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

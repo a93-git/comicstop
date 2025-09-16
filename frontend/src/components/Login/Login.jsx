@@ -14,6 +14,7 @@ export function Login() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [rememberMe, setRememberMe] = useState(true)
   const [generalError, setGeneralError] = useState('')
   
   // Set page title
@@ -54,6 +55,8 @@ export function Login() {
           terms: ''
         }))
       }
+    } else if (type === 'checkbox' && name === 'rememberMe') {
+      setRememberMe(checked)
     } else {
       setFormData(prev => ({
         ...prev,
@@ -87,7 +90,13 @@ export function Login() {
         termsAccepted: termsAccepted
       }
       
-      await login(credentials)
+      const result = await login(credentials)
+      if (rememberMe && result?.token) {
+        // Token already in localStorage; optionally extend persistence or set a marker
+        localStorage.setItem('rememberMe', '1')
+      } else {
+        localStorage.removeItem('rememberMe')
+      }
       // On success, navigate to dashboard
       navigate('/dashboard')
     } catch (error) {
@@ -171,6 +180,19 @@ export function Login() {
             {errors.terms && <span className={styles.fieldError}>{errors.terms}</span>}
           </div>
 
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={rememberMe}
+                onChange={handleChange}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxText}>Remember Me</span>
+            </label>
+          </div>
+
           <button
             type="submit"
             className={styles.submitButton}
@@ -181,6 +203,17 @@ export function Login() {
         </form>
 
         <p className={styles.signupLink}>
+          <button
+            type="button"
+            onClick={() => navigate('/forgot-password')}
+            className={styles.linkButton}
+            disabled={loading}
+          >
+            Forgot Password?
+          </button>
+        </p>
+
+        <p className={styles.signupLink}>
           Don't have an account?{' '}
           <button
             type="button"
@@ -189,6 +222,17 @@ export function Login() {
             disabled={loading}
           >
             Sign up here
+          </button>
+        </p>
+
+        <p className={styles.signupLink}>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className={styles.linkButton}
+            disabled={loading}
+          >
+            ← Go to Homepage
           </button>
         </p>
       </div>

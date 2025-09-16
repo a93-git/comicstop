@@ -26,6 +26,7 @@ export function Signup() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
+  const [passwordStrength, setPasswordStrength] = useState('')
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -73,6 +74,15 @@ export function Signup() {
         ...prev,
         [name]: value
       }))
+      if (name === 'password') {
+        const hasUpper = /[A-Z]/.test(value)
+        const hasLower = /[a-z]/.test(value)
+        const hasNumber = /[0-9]/.test(value)
+        const hasSymbol = /[^A-Za-z0-9]/.test(value)
+        const lengthOK = value.length >= 8
+        const score = [hasUpper, hasLower, hasNumber, hasSymbol, lengthOK].filter(Boolean).length
+        setPasswordStrength(score >= 4 ? 'strong' : score >= 3 ? 'medium' : 'weak')
+      }
       
       // Clear specific field error when user starts typing
       if (errors[name]) {
@@ -268,6 +278,11 @@ export function Signup() {
                   disabled={loading}
                 />
                 {errors.password && <span className={styles.fieldError}>{errors.password}</span>}
+                {formData.password && (
+                  <div className={styles.passwordStrength} data-strength={passwordStrength}>
+                    Strength: {passwordStrength}
+                  </div>
+                )}
               </div>
 
               <button
@@ -288,6 +303,17 @@ export function Signup() {
                 disabled={loading}
               >
                 Login here
+              </button>
+            </p>
+
+            <p className={styles.loginLink}>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className={styles.linkButton}
+                disabled={loading}
+              >
+                ← Go to Homepage
               </button>
             </p>
           </div>
@@ -391,6 +417,16 @@ export function Signup() {
                   disabled={!termsAccepted}
                 >
                   Continue to Payment
+                </button>
+              </div>
+
+              <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className={styles.linkButton}
+                >
+                  ← Go to Homepage
                 </button>
               </div>
             </form>
