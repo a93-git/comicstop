@@ -22,6 +22,8 @@ export const config = {
         // Bookmark endpoints
         bookmarks: "/bookmarks",
         addBookmark: "/bookmarks",
+        toggleBookmark: "/bookmarks/toggle",
+        checkBookmark: "/bookmarks/check",
         removeBookmark: "/bookmarks/{id}",
         
         // Legacy endpoints (for backward compatibility)

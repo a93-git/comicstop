@@ -4,10 +4,12 @@ import { Navbar } from '../Navbar/Navbar'
 import { ComicThumbnail } from '../ComicThumbnail/ComicThumbnail'
 import { fetchSections, fetchSectionComics } from '../../services/api'
 import { detailedSampleComics } from '../../data/sampleComics'
+import { useAuth } from '../../context/AuthContext'
 import styles from './Home.module.css'
 
 export function Home() {
   const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuth()
   const [sections, setSections] = useState([])
   const [sectionComics, setSectionComics] = useState({})
   const [loading, setLoading] = useState(true)
@@ -87,6 +89,13 @@ export function Home() {
     }
   }
 
+  const getWelcomeMessage = () => {
+    if (isAuthenticated && user) {
+      return `Welcome back, ${user.firstName || user.username}! Your comic collection awaits.`
+    }
+    return 'Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.'
+  }
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -94,7 +103,7 @@ export function Home() {
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.introText}>
-              Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.
+              {getWelcomeMessage()}
             </p>
           </div>
           <p>Loading your comic collection...</p>
@@ -110,7 +119,7 @@ export function Home() {
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.introText}>
-              Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.
+              {getWelcomeMessage()}
             </p>
           </div>
           <p>Error: {error}</p>
@@ -125,7 +134,7 @@ export function Home() {
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.introText}>
-            Your personal digital comic collection awaits. Discover, organize, and enjoy your favorite stories all in one place.
+            {getWelcomeMessage()}
           </p>
           
           {/* Search Bar */}
@@ -159,6 +168,7 @@ export function Home() {
               {(section.filteredComics || sectionComics[section.id] || []).map(comic => (
                 <ComicThumbnail
                   key={comic.id}
+                  id={comic.id}
                   imageUrl={comic.imageUrl}
                   title={comic.title}
                   author={comic.author}

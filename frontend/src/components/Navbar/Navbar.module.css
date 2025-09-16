@@ -87,6 +87,88 @@
   background-color: var(--color-bg-primary);
 }
 
+/* User Menu Styles */
+.userMenuContainer {
+  position: relative;
+}
+
+.userButton {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  min-width: 80px;
+}
+
+.userButton:hover {
+  background-color: var(--color-bg-primary);
+}
+
+.userMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px var(--color-shadow);
+  z-index: 101;
+  min-width: 160px;
+  animation: dropDown 0.2s ease forwards;
+}
+
+@keyframes dropDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userMenuItem {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: var(--font-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 0;
+}
+
+.userMenuItem:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.userMenuItem:last-child {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.userMenuItem:hover {
+  background-color: var(--color-bg-tertiary);
+  transform: none;
+}
+
+.userMenuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+}
+
+.signup {
+  background-color: var(--color-orange);
+  color: var(--color-bg-primary);
+}
+
 /* Mobile Menu Button */
 .mobileMenuButton {
   display: none;
@@ -217,6 +299,40 @@
   background-color: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
+}
+
+.mobileButton.creator {
+  background-color: #6366F1;
+  color: var(--color-bg-primary);
+}
+
+.mobileButton.profile {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.mobileButton.settings {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.mobileButton.signup {
+  background-color: var(--color-orange);
+  color: var(--color-bg-primary);
+}
+
+.mobileUserInfo {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  font-size: var(--font-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  text-align: center;
 }
 
 .mobileButton:hover {
