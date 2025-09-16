@@ -104,6 +104,7 @@ export function Dashboard() {
               {(sectionComics[section.id] || []).map(comic => (
                 <ComicThumbnail
                   key={comic.id}
+                  id={comic.id}
                   imageUrl={comic.imageUrl}
                   title={comic.title}
                   author={comic.author}

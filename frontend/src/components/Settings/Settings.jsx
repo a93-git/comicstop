@@ -30,12 +30,6 @@ export function Settings() {
     loadSettings()
   }, [])
 
-  const handleLogout = () => {
-    // Clear localStorage and navigate to home
-    localStorage.removeItem('authToken')
-    navigate('/')
-  }
-
   const handleEnableCreator = async () => {
     try {
       setSaving(true)

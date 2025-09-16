@@ -31,25 +31,13 @@ export function Navbar() {
     setIsUserMenuOpen(false)
   }
 
-  const handleUpload = () => {
-    if (isAuthenticated && user?.isCreator) {
-      navigate('/upload')
-    } else if (isAuthenticated) {
-      navigate('/signup') // To enable creator mode
-    } else {
-      navigate('/login')
-    }
-    setIsMobileMenuOpen(false)
-    setIsUserMenuOpen(false)
-  }
-
   const handleCreatorDashboard = () => {
-    if (isAuthenticated && user?.isCreator) {
-      navigate('/creator/dashboard')
-    } else if (isAuthenticated) {
-      navigate('/signup') // To enable creator mode
-    } else {
+    if (!isAuthenticated) {
       navigate('/login')
+    } else if (!user?.isCreator) {
+      navigate('/settings') // Redirect to settings to enable creator mode
+    } else {
+      navigate('/creator/dashboard')
     }
     setIsMobileMenuOpen(false)
     setIsUserMenuOpen(false)
@@ -95,7 +83,6 @@ export function Navbar() {
       
       {/* Desktop Actions */}
       <div className={styles.desktopActions}>
-        <button className={`${styles.button} ${styles.upload}`} onClick={handleUpload}>Upload</button>
         <button className={`${styles.button} ${styles.creator}`} onClick={handleCreatorDashboard}>Creator Hub</button>
         <button
           className={`${styles.button} ${styles.themeToggle}`}
@@ -164,12 +151,6 @@ export function Navbar() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className={`${styles.mobileMenu} ${styles.mobileMenuOpen}`}>
-          <button 
-            className={`${styles.mobileButton} ${styles.upload}`}
-            onClick={handleUpload}
-          >
-            Upload
-          </button>
           <button
             className={`${styles.mobileButton} ${styles.creator}`}
             onClick={handleCreatorDashboard}

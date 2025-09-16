@@ -142,7 +142,7 @@
 }
 
 .submitButton {
-  background-color: var(--color-orange);
+  background-color: var(--color-login-btn);
   color: var(--color-white);
   padding: 12px var(--spacing-lg);
   border: none;
@@ -155,7 +155,7 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: #E55A1F;
+  background-color: var(--color-login-btn-hover);
 }
 
 .submitButton:disabled {
