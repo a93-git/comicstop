@@ -1,6 +1,6 @@
 import express from 'express';
 import { CreatorProfileController } from '../controllers/creatorProfileController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.get('/search', CreatorProfileController.searchProfiles);
 router.get('/:userId/public', CreatorProfileController.getPublicProfile);
 
 // Protected routes (require authentication)
-router.use(authenticateToken);
+router.use(requireAuth);
 
 // Creator profile management
 const profileUpload = upload.fields([

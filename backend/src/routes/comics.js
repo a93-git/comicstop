@@ -1,6 +1,6 @@
 import express from 'express';
 import { ComicController } from '../controllers/comicController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { validate, comicSchemas } from '../middleware/validation.js';
 import { upload, handleUploadError } from '../middleware/upload.js';
 
@@ -164,7 +164,7 @@ const router = express.Router();
  */
 router.post(
   '/upload',
-  authenticateToken,
+  requireAuth,
   upload.single('comic'),
   handleUploadError,
   validate(comicSchemas.upload),
@@ -294,7 +294,7 @@ router.get('/', validate(comicSchemas.query, 'query'), ComicController.getComics
  *       401:
  *         description: Unauthorized
  */
-router.get('/my', authenticateToken, validate(comicSchemas.query, 'query'), ComicController.getMyComics);
+router.get('/my', requireAuth, validate(comicSchemas.query, 'query'), ComicController.getMyComics);
 
 /**
  * @swagger
@@ -340,7 +340,7 @@ router.get('/my', authenticateToken, validate(comicSchemas.query, 'query'), Comi
  *       404:
  *         description: Comic not found
  */
-router.get('/:id', authenticateToken, ComicController.getComicById);
+router.get('/:id', requireAuth, ComicController.getComicById);
 
 /**
  * @swagger
@@ -423,7 +423,7 @@ router.get('/:id', authenticateToken, ComicController.getComicById);
  *       404:
  *         description: Comic not found
  */
-router.put('/:id', authenticateToken, validate(comicSchemas.update), ComicController.updateComic);
+router.put('/:id', requireAuth, validate(comicSchemas.update), ComicController.updateComic);
 
 /**
  * @swagger
@@ -460,6 +460,6 @@ router.put('/:id', authenticateToken, validate(comicSchemas.update), ComicContro
  *       404:
  *         description: Comic not found
  */
-router.delete('/:id', authenticateToken, ComicController.deleteComic);
+router.delete('/:id', requireAuth, ComicController.deleteComic);
 
 export default router;
