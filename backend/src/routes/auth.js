@@ -2,6 +2,7 @@ import express from 'express';
 import { AuthController } from '../controllers/authController.js';
 import { validate, authSchemas } from '../middleware/validation.js';
 import { requireAuth } from '../middleware/auth.js';
+import { loginLimiter, signupLimiter, forgotPasswordLimiter } from '../middleware/rateLimiters.js';
 import { AuthService } from '../services/authService.js';
 
 const router = express.Router();
@@ -67,13 +68,14 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - emailOrPhone
  *               - username
  *               - password
+ *               - termsAccepted
  *             properties:
- *               email:
+ *               emailOrPhone:
  *                 type: string
- *                 format: email
+ *                 description: Email address or phone number
  *               username:
  *                 type: string
  *                 minLength: 3
@@ -81,12 +83,9 @@ const router = express.Router();
  *               password:
  *                 type: string
  *                 minLength: 6
- *               firstName:
- *                 type: string
- *                 maxLength: 100
- *               lastName:
- *                 type: string
- *                 maxLength: 100
+ *               termsAccepted:
+ *                 type: boolean
+ *                 description: Must be true to proceed
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -99,13 +98,13 @@ const router = express.Router();
  *       409:
  *         description: User already exists
  */
-router.post('/signup', validate(authSchemas.signup), AuthController.signup);
+router.post('/signup', signupLimiter, validate(authSchemas.signup), AuthController.signup);
 
 /**
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Login user
+ *     summary: Login user with email, username, or phone
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -114,12 +113,12 @@ router.post('/signup', validate(authSchemas.signup), AuthController.signup);
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - identifier
  *               - password
  *             properties:
- *               email:
+ *               identifier:
  *                 type: string
- *                 format: email
+ *                 description: Email address, username, or phone number
  *               password:
  *                 type: string
  *     responses:
@@ -132,7 +131,109 @@ router.post('/signup', validate(authSchemas.signup), AuthController.signup);
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', validate(authSchemas.login), AuthController.login);
+router.post('/login', loginLimiter, validate(authSchemas.login), AuthController.login);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Request a password reset email
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Reset requested
+ */
+router.post('/forgot-password', forgotPasswordLimiter, validate(authSchemas.forgotPassword), AuthController.forgotPassword);
+
+/**
+ * @swagger
+ * /auth/forgot-password/phone:
+ *   post:
+ *     summary: Request a password reset PIN to phone
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [phone]
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 description: Registered phone number
+ *     responses:
+ *       200:
+ *         description: PIN requested
+ */
+router.post('/forgot-password/phone', forgotPasswordLimiter, validate(authSchemas.forgotPasswordPhone), AuthController.forgotPasswordPhone);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password using a token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, password]
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post('/reset-password', validate(authSchemas.resetPassword), AuthController.resetPassword);
+
+/**
+ * @swagger
+ * /auth/reset-password/phone:
+ *   post:
+ *     summary: Reset password using a phone PIN
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [phone, pin, password]
+ *             properties:
+ *               phone:
+ *                 type: string
+ *               pin:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         description: Invalid or expired PIN
+ */
+router.post('/reset-password/phone', validate(authSchemas.resetPasswordWithPin), AuthController.resetPasswordPhone);
 
 /**
  * @swagger
@@ -229,10 +330,19 @@ router.post('/creator-mode', requireAuth, async (req, res) => {
 router.delete('/me', requireAuth, async (req, res) => {
 	try {
 		await AuthService.deleteAccount(req.user.id)
-		res.json({ success: true, message: 'Account deleted' })
+		res.json({ success: true, message: 'Account deleted. Please remove client token.', data: { loggedOut: true } })
 	} catch (e) {
 		res.status(400).json({ success: false, message: e.message })
 	}
 })
+
+// Profile updates (single-field endpoints)
+router.patch('/profile/username', requireAuth, validate(authSchemas.updateUsername), AuthController.updateUsername)
+router.patch('/profile/email', requireAuth, validate(authSchemas.updateEmail), AuthController.updateEmail)
+router.patch('/profile/phone', requireAuth, validate(authSchemas.updatePhone), AuthController.updatePhone)
+router.patch('/profile/password', requireAuth, validate(authSchemas.updatePassword), AuthController.updatePassword)
+
+// Profile update unified endpoint (exactly one field allowed)
+router.patch('/profile', requireAuth, validate(authSchemas.updateProfileOneOf), AuthController.updateProfileOneOf)
 
 export default router;

@@ -50,12 +50,41 @@
   font-size: var(--font-base);
 }
 
+.passwordField {
+  position: relative;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 6px; /* reduce gap to edge */
+  top: 50%;
+  transform: translateY(-50%); /* vertical centering */
+  background: none;
+  border: none;
+  color: var(--color-orange);
+  cursor: pointer;
+  padding: 0 2px; /* tighter padding to reduce visual gap */
+  line-height: 1; /* align icon/text to center */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover:not(:disabled) {
+  color: #E55A1F;
+}
+
 .input {
   padding: 12px var(--spacing-md);
   border: 1px solid #D1D5DB;
   border-radius: var(--radius-sm);
   font-size: var(--font-base);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Make room for the toggle inside the field */
+.passwordField .input {
+  padding-right: 42px;
 }
 
 .input:focus {
@@ -122,27 +151,10 @@
   accent-color: var(--color-orange);
 }
 
-.checkboxText {
-  color: var(--color-gray700);
-  font-size: var(--font-base);
-}
 
-.termsLink {
-  background: none;
-  border: none;
-  color: var(--color-orange);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: inherit;
-  padding: 0;
-}
-
-.termsLink:hover {
-  color: #E55A1F;
-}
 
 .submitButton {
-  background-color: var(--color-login-btn);
+  background-color: var(--color-orange);
   color: var(--color-white);
   padding: 12px var(--spacing-lg);
   border: none;
@@ -155,7 +167,7 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: var(--color-login-btn-hover);
+  background-color: var(--color-orange-hover);
 }
 
 .submitButton:disabled {

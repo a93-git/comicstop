@@ -34,7 +34,7 @@ export class SeriesService {
         include: [{
           model: User,
           as: 'creator',
-          attributes: ['id', 'username', 'firstName', 'lastName'],
+          attributes: ['id', 'username'],
         }],
       });
 
@@ -96,7 +96,7 @@ export class SeriesService {
         {
           model: User,
           as: 'creator',
-          attributes: ['id', 'username', 'firstName', 'lastName'],
+          attributes: ['id', 'username'],
         },
         {
           model: Comic,

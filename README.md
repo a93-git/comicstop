@@ -40,6 +40,7 @@ npm run dev    # opens http://localhost:5173
 
 - Frontend uses API base URL http://localhost:3001/api in development (see `frontend/src/config.js`).
 - Visit http://localhost:5173 and ensure pages load and network calls to http://localhost:3001/api succeed.
+- You can log in without any additional checkboxes; the login form accepts an identifier (email, username, or phone) plus a password.
 
 ## Detailed setup
 
@@ -86,14 +87,46 @@ npm run preview
 - Frontend dev server runs on 5173 and talks to backend on 3001. CORS is configured to allow http://localhost:5173.
 - Auth tokens are stored in localStorage by `frontend/src/services/api.js`.
 - Update `frontend/src/config.js` if your ports differ.
+- Auth endpoints are rate limited (login/signup/forgot-password). On exceeding limits, the API returns HTTP 429 with a clear error message which is surfaced in the Login UI.
+ - Login button color: The login submit button uses `--color-login-btn` (#FF9B70). Hover and active states use `--color-login-btn-hover` and `--color-login-btn-active` respectively. These are defined in `frontend/src/index.css` and apply in both light and dark themes. Sign Up link styling is unaffected.
+
+### Frontend UI consistency
+
+- 404/NotFound page uses the same `Navbar` component without extra padding or margins around it. Spacing is applied only to the page `main` content to match other screens. A visual test (`frontend/__tests__/NotFound.navbar-visual.test.jsx`) guards this structure.
+- Password fields across Login, Signup, and Reset use a consistent structure with a right-aligned, vertically centered visibility toggle. See `frontend/__tests__/PasswordLayout.visual.test.jsx`.
+
+### Password reset methods
+
+- Users can reset their password via:
+	- Email link: POST `/api/auth/forgot-password` with `{ email }`, then follow `/reset-password?token=...`.
+	- Phone PIN: POST `/api/auth/forgot-password/phone` with `{ phone }`, then go to `/reset-password?via=phone` and submit `{ phone, pin, password }` which calls `/api/auth/reset-password/phone`.
+- Frontend Forgot Password shows a choice (Email link or Phone PIN). Reset page supports both modes. See tests:
+	- Backend: `backend/__tests__/auth.password-reset-phone.int.test.js`
+	- Frontend: `frontend/__tests__/ForgotReset.dual-methods.test.jsx`
 
 ## Testing
 
-There is no automated test suite configured for the frontend yet. Manual validation:
+Frontend and backend tests are available and run with Jest.
 
-1. Backend up on 3001 with SQLite.
-2. Frontend up on 5173.
-3. Navigate to `/signup` → create user → then `/login` → login → verify profile API.
+Frontend (Jest + React Testing Library):
+
+```
+cd frontend
+npm install
+npm test
+```
+
+Backend:
+
+```
+cd backend
+npm install
+npm test
+```
+
+Notes:
+- Theme preference changes in Settings apply instantly across the app by updating `document.documentElement[data-theme]` and are persisted in localStorage under `comicstop-theme`.
+- On page load, the saved theme is applied before user interaction. AUTO mode follows the system preference and updates on system theme changes.
 
 ## Scripts
 

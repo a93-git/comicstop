@@ -44,7 +44,7 @@ export function Navbar() {
   }
 
   const handleProfile = () => {
-    navigate('/profile')
+    navigate('/settings#profile')
     setIsUserMenuOpen(false)
     setIsMobileMenuOpen(false)
   }

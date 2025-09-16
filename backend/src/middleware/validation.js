@@ -32,17 +32,63 @@ export const validate = (schema, property = 'body') => {
 // Authentication validation schemas
 export const authSchemas = {
   signup: Joi.object({
-    email: Joi.string().email().required(),
+    emailOrPhone: Joi.alternatives().try(
+      Joi.string().email(),
+      Joi.string().pattern(/^[+]?[- ().0-9]{3,}$/)
+    ).required(),
     username: Joi.string().alphanum().min(3).max(50).required(),
     password: Joi.string().min(6).max(128).required(),
-    firstName: Joi.string().max(100).optional(),
-    lastName: Joi.string().max(100).optional(),
+    termsAccepted: Joi.boolean().valid(true).required(),
   }),
 
   login: Joi.object({
-    email: Joi.string().email().required(),
+    // Accept a generic identifier that can be email, username, or phone
+    identifier: Joi.string().min(1).required(),
     password: Joi.string().required(),
   }),
+
+  forgotPassword: Joi.object({
+    email: Joi.string().email().required(),
+  }),
+
+  // Phone-based: request a PIN to be sent to user's registered phone via emailOrPhone or phone
+  forgotPasswordPhone: Joi.object({
+    phone: Joi.string().min(3).max(32).required(),
+  }),
+
+  resetPassword: Joi.object({
+    token: Joi.string().min(10).max(255).required(),
+    password: Joi.string().min(6).max(128).required(),
+  }),
+
+  // Phone-based: verify PIN and set password
+  resetPasswordWithPin: Joi.object({
+    phone: Joi.string().min(3).max(32).required(),
+    pin: Joi.string().min(4).max(12).required(),
+    password: Joi.string().min(6).max(128).required(),
+  }),
+
+  // Profile updates (single-field endpoints)
+  updateUsername: Joi.object({
+    username: Joi.string().alphanum().min(3).max(50).required(),
+  }),
+  updateEmail: Joi.object({
+    email: Joi.string().email().required(),
+  }),
+  updatePhone: Joi.object({
+    phone: Joi.string().min(3).max(32).allow(null, '').optional(),
+  }),
+  updatePassword: Joi.object({
+    password: Joi.string().min(6).max(128).required(),
+  }),
+
+  // Unified endpoint allowing exactly one of the fields
+  updateProfileOneOf: Joi.object({
+    username: Joi.string().alphanum().min(3).max(50),
+    email: Joi.string().email(),
+    phone: Joi.string().min(3).max(32).allow(null, ''),
+    password: Joi.string().min(6).max(128),
+  }).xor('username', 'email', 'phone', 'password'),
 };
 
 // Comic validation schemas

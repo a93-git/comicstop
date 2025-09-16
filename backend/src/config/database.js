@@ -46,12 +46,11 @@ export const testConnection = async () => {
  */
 export const initializeDatabase = async () => {
   try {
-    // Import models (will be created later)
-    await import('../models/User.js');
-    await import('../models/Comic.js');
+    // Import all models and define associations before syncing
+    await import('../models/index.js');
     
     // Sync database (create tables if they don't exist)
-    await sequelize.sync({ alter: config.nodeEnv === 'development' });
+  await sequelize.sync({ alter: config.nodeEnv === 'development' });
     console.log('✅ Database models synchronized successfully.');
     
     return true;

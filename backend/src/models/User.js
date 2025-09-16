@@ -22,10 +22,18 @@ export const User = sequelize.define('User', {
   },
   email: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
     unique: true,
     validate: {
       isEmail: true,
+    },
+  },
+  phone: {
+    type: DataTypes.STRING(32),
+    allowNull: true,
+    unique: true,
+    validate: {
+      len: [3, 32],
     },
   },
   password: {
@@ -60,6 +68,23 @@ export const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  resetPasswordToken: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
+  resetPasswordExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  // Phone-based reset (PIN code via SMS)
+  resetPinCode: {
+    type: DataTypes.STRING(12),
+    allowNull: true,
+  },
+  resetPinExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'users',
   timestamps: true,
@@ -72,8 +97,22 @@ export const User = sequelize.define('User', {
       unique: true,
       fields: ['username'],
     },
+    {
+      unique: true,
+      fields: ['phone'],
+    },
   ],
   hooks: {
+    beforeValidate: async (user) => {
+      // Case-insensitive normalization
+      if (user.email) user.email = String(user.email).trim().toLowerCase();
+      if (user.username) user.username = String(user.username).trim().toLowerCase();
+      if (user.phone) {
+        // Normalize phone by stripping non-digits
+        const digits = String(user.phone).replace(/\D+/g, '');
+        user.phone = digits || null;
+      }
+    },
     beforeCreate: async (user) => {
       if (user.password) {
         const salt = await bcrypt.genSalt(12);

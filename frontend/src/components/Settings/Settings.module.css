@@ -1,8 +1,8 @@
 /* Settings component styles */
 .container {
   min-height: 100vh;
-  background: var(--color-background);
-  color: var(--color-text);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 .main {
@@ -25,14 +25,14 @@
 .header {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border, #eee);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: var(--color-primary);
+  color: var(--color-orange);
 }
 
 .userInfo {
@@ -50,28 +50,63 @@
 .email,
 .joinDate {
   margin: 0;
-  color: var(--color-text-secondary, #666);
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
 }
 
 .content {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 2rem;
+}
+
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    padding-right: 0.5rem;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .sidebarLink {
+    color: var(--color-text-primary);
+    text-decoration: none;
+    padding: 0.4rem 0.25rem;
+    border-radius: 4px;
+  }
+
+  .sidebarLink:hover {
+    color: var(--color-orange);
+    background: var(--color-bg-tertiary);
+  }
+}
+
+.sections {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
 .section {
-  background: var(--color-surface, #fff);
+  background: var(--color-bg-secondary);
   border-radius: 8px;
   padding: 1.5rem;
-  border: 1px solid var(--color-border, #eee);
+  border: 1px solid var(--color-border);
 }
 
 .sectionTitle {
   font-size: 1.2rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
-  color: var(--color-primary);
+  color: var(--color-orange);
 }
 
 .statusGrid {
@@ -85,9 +120,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  background: var(--color-background);
+  background: var(--color-bg-tertiary);
   border-radius: 4px;
-  border: 1px solid var(--color-border, #eee);
+  border: 1px solid var(--color-border);
 }
 
 .statusLabel {
@@ -125,17 +160,17 @@
   width: 100%;
   max-width: 200px;
   padding: 0.5rem;
-  border: 1px solid var(--color-border, #ddd);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background: var(--color-surface, #fff);
-  color: var(--color-text);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font-size: 0.95rem;
 }
 
 .settingSelect:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(255, 107, 44, 0.2);
+  border-color: var(--color-orange);
+  box-shadow: 0 0 0 2px var(--color-orange);
 }
 
 .checkboxLabel {
@@ -149,13 +184,66 @@
 .checkbox {
   width: 16px;
   height: 16px;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-orange);
 }
 
 .actionGrid {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+/* Profile section */
+.profileGrid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.avatarCol { align-self: start; }
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--color-bg-tertiary);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.infoCol { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.inlineRow { display: flex; gap: 0.5rem; align-items: center; }
+
+.settingInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.settingInput:disabled { opacity: 0.7; }
+
+.secondaryButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
 }
 
 .primaryButton,
@@ -170,12 +258,12 @@
 }
 
 .primaryButton {
-  background: var(--color-primary);
+  background: var(--color-orange);
   color: white;
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--color-primary-hover, #e55a28);
+  background: var(--color-orange-hover);
 }
 
 .primaryButton:disabled {
@@ -225,4 +313,12 @@
   .dangerButton {
     width: 100%;
   }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .profileGrid { grid-template-columns: 1fr; }
+  .avatar { width: 72px; height: 72px; font-size: 1.5rem; }
 }

@@ -8,7 +8,6 @@ import { Signup } from './components/Signup/Signup'
 import { Dashboard } from './components/Dashboard/Dashboard'
 import { Upload } from './components/Upload/Upload'
 import { ComicReader } from './components/ComicReader/ComicReader'
-import { Profile } from './components/Profile/Profile'
 import { Settings } from './components/Settings/Settings'
 import { Terms } from './components/Terms/Terms'
 import { CreatorDashboard } from './components/CreatorDashboard/CreatorDashboard'
@@ -16,6 +15,7 @@ import { CreatorProfile } from './components/CreatorProfile/CreatorProfile'
 import { NotFound } from './components/NotFound/NotFound'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { ForgotPassword } from './components/AuthExtras/ForgotPassword'
+import { ResetPassword } from './components/AuthExtras/ResetPassword'
 
 export default function App() {
   return (
@@ -33,11 +33,6 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/comic/:id" element={<ComicReader />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Settings />
@@ -45,6 +40,7 @@ export default function App() {
             } />
             <Route path="/terms" element={<Terms />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Creator Routes (guarded) */}
             <Route path="/creator/dashboard" element={

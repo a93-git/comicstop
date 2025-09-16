@@ -252,9 +252,7 @@
   }
 }
 
-.mobileMenuOpen {
-  /* This class is no longer needed since we conditionally render */
-}
+/* .mobileMenuOpen class removed (unused) */
 
 .mobileMenuOverlay {
   position: fixed;

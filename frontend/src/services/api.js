@@ -55,11 +55,22 @@ async function apiRequest(endpoint, options = {}) {
       credentials: 'include', // Include cookies for authentication
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    const text = await response.text()
+    let data
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      data = null
     }
 
-    const data = await response.json()
+    if (!response.ok) {
+      const message = data?.message || `HTTP error! status: ${response.status}`
+      const err = new Error(message)
+      err.status = response.status
+      err.errors = data?.errors
+      throw err
+    }
+
     return data
   } catch (error) {
     console.error('API request failed:', error)
@@ -236,6 +247,42 @@ export async function login(credentials) {
   }
 }
 
+/**
+ * Password reset flow
+ */
+export async function requestPasswordReset(email) {
+  const res = await apiRequest('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+  return res
+}
+
+export async function resetPasswordWithToken(token, password) {
+  const res = await apiRequest('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  })
+  return res
+}
+
+// Phone-based flows
+export async function requestPasswordResetByPhone(phone) {
+  const res = await apiRequest('/auth/forgot-password/phone', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  })
+  return res
+}
+
+export async function resetPasswordWithPin(phone, pin, password) {
+  const res = await apiRequest('/auth/reset-password/phone', {
+    method: 'POST',
+    body: JSON.stringify({ phone, pin, password }),
+  })
+  return res
+}
+
 export async function logout() {
   try {
     await apiRequest(config.endpoints.logout, { method: 'POST' })
@@ -255,20 +302,58 @@ export async function getUserProfile() {
   return getCurrentUser() || { username: 'Guest', email: 'guest@example.com', joinDate: new Date().toISOString() }
 }
 
+// Profile updates
+export async function updateUsername(username) {
+  const res = await apiRequest('/auth/profile/username', { method: 'PATCH', body: JSON.stringify({ username }) })
+  if (res.success && res.data?.user) {
+    localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+  }
+  return res
+}
+
+export async function updateEmail(email) {
+  const res = await apiRequest('/auth/profile/email', { method: 'PATCH', body: JSON.stringify({ email }) })
+  if (res.success && res.data?.user) {
+    localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+  }
+  return res
+}
+
+export async function updatePhone(phone) {
+  const res = await apiRequest('/auth/profile/phone', { method: 'PATCH', body: JSON.stringify({ phone }) })
+  if (res.success && res.data?.user) {
+    localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+  }
+  return res
+}
+
+export async function updatePassword(password) {
+  const res = await apiRequest('/auth/profile/password', { method: 'PATCH', body: JSON.stringify({ password }) })
+  return res
+}
+
 export async function getUserSettings() {
-  try {
-    const res = await apiRequest(config.endpoints.settings)
-    if (res.success && res.data?.settings) {
-      return res.data.settings
+  const user = getCurrentUser()
+  const userId = user?.id || 'guest'
+
+  // Helper to read locally stored settings per user
+  const localKey = `user:${userId}:settings`
+  const getLocal = () => {
+    try {
+      const raw = localStorage.getItem(localKey)
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
     }
-  } catch {}
-  // Return fallback settings
-  return {
-    username: 'Guest',
-    email: 'guest@example.com', 
-    joinDate: new Date().toISOString(),
-    isCreator: false,
-    emailVerified: false,
+  }
+
+  // Base defaults using current user info when available
+  const baseDefaults = {
+    username: user?.username || 'Guest',
+    email: user?.email || 'guest@example.com',
+    joinDate: user?.joinDate || user?.createdAt || new Date().toISOString(),
+    isCreator: Boolean(user?.isCreator),
+    emailVerified: Boolean(user?.emailVerified),
     theme: 'auto',
     readingPreferences: {
       showDialogues: true,
@@ -277,8 +362,69 @@ export async function getUserSettings() {
     notifications: {
       emailNotifications: true,
       pushNotifications: false,
-    }
+    },
   }
+
+  // Fetch server settings if available
+  let serverSettings = null
+  try {
+    const res = await apiRequest(config.endpoints.settings)
+    if (res.success && res.data?.settings) {
+      serverSettings = res.data.settings
+    }
+  } catch {}
+
+  // Merge: defaults <- server <- local overrides
+  const localOverrides = getLocal() || {}
+
+  const merged = {
+    ...baseDefaults,
+    ...(serverSettings || {}),
+    // Deep merge for nested structures
+    readingPreferences: {
+      ...baseDefaults.readingPreferences,
+      ...(serverSettings?.readingPreferences || {}),
+      ...(localOverrides.readingPreferences || {}),
+    },
+    notifications: {
+      ...baseDefaults.notifications,
+      ...(serverSettings?.notifications || {}),
+      ...(localOverrides.notifications || {}),
+    },
+    theme: localOverrides.theme ?? serverSettings?.theme ?? baseDefaults.theme,
+  }
+
+  return merged
+}
+
+export function saveUserSettings(partial) {
+  const user = getCurrentUser()
+  const userId = user?.id || 'guest'
+  const key = `user:${userId}:settings`
+  let existing = {}
+  try {
+    const raw = localStorage.getItem(key)
+    existing = raw ? JSON.parse(raw) : {}
+  } catch {}
+
+  // Merge shallow, but handle nested known groups
+  const next = {
+    ...existing,
+    ...partial,
+    readingPreferences: {
+      ...(existing.readingPreferences || {}),
+      ...(partial.readingPreferences || {}),
+    },
+    notifications: {
+      ...(existing.notifications || {}),
+      ...(partial.notifications || {}),
+    },
+  }
+
+  try {
+    localStorage.setItem(key, JSON.stringify(next))
+  } catch {}
+  return next
 }
 
 export async function verifyEmail() {

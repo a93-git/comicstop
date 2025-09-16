@@ -30,7 +30,7 @@ export class ComicService {
         include: [{
           model: User,
           as: 'uploader',
-          attributes: ['id', 'username', 'firstName', 'lastName'],
+          attributes: ['id', 'username'],
         }],
       });
 
@@ -96,7 +96,7 @@ export class ComicService {
       include: [{
         model: User,
         as: 'uploader',
-        attributes: ['id', 'username', 'firstName', 'lastName'],
+  attributes: ['id', 'username'],
       }],
       order: [[sort, order]],
       limit: parseInt(limit),
@@ -126,7 +126,7 @@ export class ComicService {
       include: [{
         model: User,
         as: 'uploader',
-        attributes: ['id', 'username', 'firstName', 'lastName'],
+  attributes: ['id', 'username'],
       }],
     });
 
@@ -357,7 +357,7 @@ export class ComicService {
         {
           model: User,
           as: 'uploader',
-          attributes: ['id', 'username', 'firstName', 'lastName'],
+          attributes: ['id', 'username'],
         },
       ],
       order: [[sort, order]],

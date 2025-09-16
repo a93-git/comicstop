@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 const THEME_STORAGE_KEY = 'comicstop-theme'
 const THEMES = {
   LIGHT: 'light',
-  DARK: 'dark'
+  DARK: 'dark',
+  AUTO: 'auto',
 }
 
 export function useTheme() {
@@ -11,29 +12,38 @@ export function useTheme() {
   const getInitialTheme = () => {
     try {
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
-      if (savedTheme && Object.values(THEMES).includes(savedTheme)) {
+      if (savedTheme === THEMES.LIGHT || savedTheme === THEMES.DARK || savedTheme === THEMES.AUTO) {
         return savedTheme
       }
     } catch (error) {
       console.warn('Failed to access localStorage:', error)
     }
     
-    // Fall back to system preference
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches 
-        ? THEMES.DARK 
-        : THEMES.LIGHT
-    }
-    
-    return THEMES.LIGHT
+    // Fall back to system preference (auto)
+    return THEMES.AUTO
   }
 
   const [theme, setTheme] = useState(getInitialTheme)
 
   // Apply theme to document root
   useEffect(() => {
+    const isDarkPreferred = typeof window !== 'undefined' && window.matchMedia 
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false
+
+    // When in AUTO, set attribute to current system preference and store 'auto'
+    if (theme === THEMES.AUTO) {
+      document.documentElement.setAttribute('data-theme', isDarkPreferred ? THEMES.DARK : THEMES.LIGHT)
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, THEMES.AUTO)
+      } catch (error) {
+        console.warn('Failed to save theme to localStorage:', error)
+      }
+      return
+    }
+
+    // Explicit light/dark
     document.documentElement.setAttribute('data-theme', theme)
-    
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme)
     } catch (error) {
@@ -48,15 +58,14 @@ export function useTheme() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     
     const handleChange = (e) => {
-      // Only update if no theme is explicitly saved
+      // If AUTO mode, update applied attribute on the fly
       try {
         const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
-        if (!savedTheme) {
-          setTheme(e.matches ? THEMES.DARK : THEMES.LIGHT)
+        if (savedTheme === THEMES.AUTO) {
+          document.documentElement.setAttribute('data-theme', e.matches ? THEMES.DARK : THEMES.LIGHT)
         }
       } catch {
-        // If localStorage fails, update based on system preference
-        setTheme(e.matches ? THEMES.DARK : THEMES.LIGHT)
+        // No-op
       }
     }
 
@@ -70,14 +79,16 @@ export function useTheme() {
 
   const setLightTheme = () => setTheme(THEMES.LIGHT)
   const setDarkTheme = () => setTheme(THEMES.DARK)
+  const setAutoTheme = () => setTheme(THEMES.AUTO)
 
   return {
     theme,
-    isLight: theme === THEMES.LIGHT,
-    isDark: theme === THEMES.DARK,
+    isLight: (theme === THEMES.LIGHT) || (theme === THEMES.AUTO && !(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)),
+    isDark: (theme === THEMES.DARK) || (theme === THEMES.AUTO && (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)),
     toggleTheme,
     setLightTheme,
     setDarkTheme,
+    setAutoTheme,
     THEMES
   }
 }

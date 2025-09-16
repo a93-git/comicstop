@@ -8,14 +8,14 @@ export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [formData, setFormData] = useState({
-    emailOrPhone: '',
+    identifier: '',
     password: ''
   })
-  const [termsAccepted, setTermsAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [rememberMe, setRememberMe] = useState(true)
   const [generalError, setGeneralError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   
   // Set page title
   useEffect(() => {
@@ -29,14 +29,11 @@ export function Login() {
     const newErrors = {}
 
     // Required field validation
-    if (!formData.emailOrPhone.trim()) {
-      newErrors.emailOrPhone = 'Email or phone number is required'
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = 'Email, username, or phone is required'
     }
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required'
-    }
-    if (!termsAccepted) {
-      newErrors.terms = 'You must agree to the Terms and Conditions'
     }
 
     setErrors(newErrors)
@@ -46,16 +43,7 @@ export function Login() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     
-    if (type === 'checkbox' && name === 'termsAccepted') {
-      setTermsAccepted(checked)
-      // Clear terms error when checkbox is checked
-      if (checked && errors.terms) {
-        setErrors(prev => ({
-          ...prev,
-          terms: ''
-        }))
-      }
-    } else if (type === 'checkbox' && name === 'rememberMe') {
+    if (type === 'checkbox' && name === 'rememberMe') {
       setRememberMe(checked)
     } else {
       setFormData(prev => ({
@@ -83,12 +71,8 @@ export function Login() {
 
     setLoading(true)
     try {
-      // The backend expects 'email' field, so we map emailOrPhone to email
-      const credentials = {
-        email: formData.emailOrPhone,
-        password: formData.password,
-        termsAccepted: termsAccepted
-      }
+      // The backend accepts a generic identifier (email/username/phone)
+      const credentials = { identifier: formData.identifier, password: formData.password }
       
       const result = await login(credentials)
       if (rememberMe && result?.token) {
@@ -128,56 +112,46 @@ export function Login() {
           )}
 
           <div className={styles.formGroup}>
-            <label htmlFor="emailOrPhone" className={styles.label}>Email or Phone Number</label>
+            <label htmlFor="identifier" className={styles.label}>Email, Username, or Phone</label>
             <input
               type="text"
-              id="emailOrPhone"
-              name="emailOrPhone"
-              value={formData.emailOrPhone}
+              id="identifier"
+              name="identifier"
+              value={formData.identifier}
               onChange={handleChange}
-              className={`${styles.input} ${errors.emailOrPhone ? styles.inputError : ''}`}
+              className={`${styles.input} ${errors.identifier ? styles.inputError : ''}`}
               disabled={loading}
-              placeholder="Enter your email or phone number"
+              placeholder="Enter your email, username, or phone number"
             />
-            {errors.emailOrPhone && <span className={styles.fieldError}>{errors.emailOrPhone}</span>}
+            {errors.identifier && <span className={styles.fieldError}>{errors.identifier}</span>}
           </div>
 
           <div className={styles.formGroup}>
             <label htmlFor="password" className={styles.label}>Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-              disabled={loading}
-              placeholder="Enter your password"
-            />
-            {errors.password && <span className={styles.fieldError}>{errors.password}</span>}
-          </div>
-
-          <div className={styles.checkboxGroup}>
-            <label className={styles.checkboxLabel}>
+            <div className={styles.passwordField}>
               <input
-                type="checkbox"
-                name="termsAccepted"
-                checked={termsAccepted}
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
                 onChange={handleChange}
-                className={styles.checkbox}
+                className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                disabled={loading}
+                placeholder="Enter your password"
               />
-              <span className={styles.checkboxText}>
-                I agree to the{' '}
-                <button
-                  type="button"
-                  onClick={() => window.open('/terms', '_blank')}
-                  className={styles.termsLink}
-                >
-                  Terms and Conditions
-                </button>
-              </span>
-            </label>
-            {errors.terms && <span className={styles.fieldError}>{errors.terms}</span>}
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                aria-controls="password"
+                onClick={() => setShowPassword(prev => !prev)}
+                disabled={loading}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.password && <span className={styles.fieldError}>{errors.password}</span>}
           </div>
 
           <div className={styles.checkboxGroup}>
@@ -196,7 +170,7 @@ export function Login() {
           <button
             type="submit"
             className={styles.submitButton}
-            disabled={loading || !termsAccepted}
+            disabled={loading}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

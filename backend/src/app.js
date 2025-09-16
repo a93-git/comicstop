@@ -25,8 +25,38 @@ app.use(helmet({
 
 /**
  * CORS configuration
+ * Allow configured FRONTEND_URL and common Vite dev/preview localhost ports in development.
  */
-app.use(cors(config.cors));
+const allowedOrigins = new Set([
+  ...(Array.isArray(config.cors.origin) ? config.cors.origin : [config.cors.origin]).filter(Boolean),
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5175',
+  'http://127.0.0.1:5176',
+  'http://localhost:4173',
+  'http://localhost:4174',
+  'http://127.0.0.1:4173',
+  'http://127.0.0.1:4174',
+]);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) return callback(null, true);
+    // Also allow any localhost ports in the 3000-5999 range for dev convenience
+    if (/^http:\/\/(localhost|127\.0\.0\.1):([3-5]\d{3})$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 /**
  * Rate limiting
@@ -146,7 +176,9 @@ const startServer = async () => {
   }
 };
 
-// Start the server
-startServer();
+// Start the server unless running under tests
+if (config.nodeEnv !== 'test') {
+  startServer();
+}
 
-export default app;
+export { app, startServer };

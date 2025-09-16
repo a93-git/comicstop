@@ -98,12 +98,41 @@
   font-size: var(--font-base);
 }
 
+.passwordField {
+  position: relative;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 6px; /* tighter gap */
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-orange);
+  cursor: pointer;
+  padding: 0 2px; /* reduce hitbox visual spacing */
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover:not(:disabled) {
+  color: #E55A1F;
+}
+
 .input {
   padding: 12px var(--spacing-md);
   border: 1px solid #D1D5DB;
   border-radius: var(--radius-sm);
   font-size: var(--font-base);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ensure space for the inline toggle */
+.passwordField .input {
+  padding-right: 42px;
 }
 
 .input:focus {

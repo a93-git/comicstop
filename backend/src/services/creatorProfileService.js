@@ -87,7 +87,7 @@ export class CreatorProfileService {
         include: [{
           model: User,
           as: 'user',
-          attributes: ['id', 'username', 'firstName', 'lastName', 'email'],
+          attributes: ['id', 'username', 'email'],
         }],
       });
 
@@ -107,7 +107,7 @@ export class CreatorProfileService {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['id', 'username', 'firstName', 'lastName', 'email'],
+  attributes: ['id', 'username', 'email'],
       }],
     });
 
@@ -123,7 +123,7 @@ export class CreatorProfileService {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['id', 'username', 'firstName', 'lastName'],
+  attributes: ['id', 'username'],
       }],
     });
 
@@ -256,7 +256,7 @@ export class CreatorProfileService {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['id', 'username', 'firstName', 'lastName'],
+  attributes: ['id', 'username'],
       }],
       order: [[sort, order]],
       limit: parseInt(limit),

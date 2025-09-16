@@ -4,8 +4,9 @@
   /* Brand colors - consistent across themes */
   --color-orange: #FF6B2C;
   --color-orange-hover: #E55A1F;
-  --color-login-btn: #FF8A5C;
-  --color-login-btn-hover: #FF6B2C;
+  --color-login-btn: #FF9B70; /* Login button base */
+  --color-login-btn-hover: #FF8A5C; /* Slightly darker on hover */
+  --color-login-btn-active: #FF6B2C; /* Brand orange on active/pressed */
   
   /* Spacing and typography - consistent across themes */
   --spacing-sm: 8px;
