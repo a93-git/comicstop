@@ -17,6 +17,7 @@ export const config = {
         signup: "/auth/signup",
         login: "/auth/login",
         profile: "/auth/profile",
+        settings: "/auth/settings",
         logout: "/auth/logout",
         
         // Bookmark endpoints

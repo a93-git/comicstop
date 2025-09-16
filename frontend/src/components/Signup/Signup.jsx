@@ -14,7 +14,8 @@ export function Signup() {
     phone: '',
     username: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   })
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [paymentData, setPaymentData] = useState(null) // eslint-disable-line no-unused-vars
@@ -58,6 +59,11 @@ export function Signup() {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters long'
+    }
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password'
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
     }
 
     setErrors(newErrors)
@@ -283,6 +289,20 @@ export function Signup() {
                     Strength: {passwordStrength}
                   </div>
                 )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="confirmPassword" className={styles.label}>Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
+                  disabled={loading}
+                />
+                {errors.confirmPassword && <span className={styles.fieldError}>{errors.confirmPassword}</span>}
               </div>
 
               <button

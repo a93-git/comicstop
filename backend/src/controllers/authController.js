@@ -56,6 +56,39 @@ export class AuthController {
   });
 
   /**
+   * Get user settings
+   * GET /auth/settings
+   */
+  static settings = asyncHandler(async (req, res) => {
+    const user = await AuthService.getProfile(req.user.id);
+
+    // Return user settings - combining profile data with specific settings
+    const settings = {
+      username: user.username,
+      email: user.email,
+      joinDate: user.createdAt,
+      isCreator: user.isCreator || false,
+      emailVerified: user.emailVerified || false,
+      theme: user.preferences?.theme || 'auto',
+      readingPreferences: {
+        showDialogues: user.preferences?.showDialogues ?? true,
+        enableClickNavigation: user.preferences?.enableClickNavigation ?? true,
+      },
+      notifications: {
+        emailNotifications: user.preferences?.emailNotifications ?? true,
+        pushNotifications: user.preferences?.pushNotifications ?? false,
+      }
+    };
+
+    res.json({
+      success: true,
+      data: {
+        settings,
+      },
+    });
+  });
+
+  /**
    * Logout user (client-side token removal)
    * POST /auth/logout
    */

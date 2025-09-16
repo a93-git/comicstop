@@ -4,6 +4,8 @@
   /* Brand colors - consistent across themes */
   --color-orange: #FF6B2C;
   --color-orange-hover: #E55A1F;
+  --color-login-btn: #FF8A5C;
+  --color-login-btn-hover: #FF6B2C;
   
   /* Spacing and typography - consistent across themes */
   --spacing-sm: 8px;

@@ -164,6 +164,34 @@ router.get('/profile', requireAuth, AuthController.profile);
 
 /**
  * @swagger
+ * /auth/settings:
+ *   get:
+ *     summary: Get user settings
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User settings retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     settings:
+ *                       type: object
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/settings', requireAuth, AuthController.settings);
+
+/**
+ * @swagger
  * /auth/logout:
  *   post:
  *     summary: Logout user

@@ -255,6 +255,32 @@ export async function getUserProfile() {
   return getCurrentUser() || { username: 'Guest', email: 'guest@example.com', joinDate: new Date().toISOString() }
 }
 
+export async function getUserSettings() {
+  try {
+    const res = await apiRequest(config.endpoints.settings)
+    if (res.success && res.data?.settings) {
+      return res.data.settings
+    }
+  } catch {}
+  // Return fallback settings
+  return {
+    username: 'Guest',
+    email: 'guest@example.com', 
+    joinDate: new Date().toISOString(),
+    isCreator: false,
+    emailVerified: false,
+    theme: 'auto',
+    readingPreferences: {
+      showDialogues: true,
+      enableClickNavigation: true,
+    },
+    notifications: {
+      emailNotifications: true,
+      pushNotifications: false,
+    }
+  }
+}
+
 export async function verifyEmail() {
   const res = await apiRequest('/auth/verify-email', { method: 'POST' })
   if (res.success && res.data?.user) {
