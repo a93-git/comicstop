@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
-import { signup } from '../../services/api'
+import { signup, checkEmailAvailability, checkPhoneAvailability, checkUsernameAvailability } from '../../services/api'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import styles from './Signup.module.css'
+import { ISD_OPTIONS, getDefaultISD } from '../../utils/phone'
 
 export function Signup() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    emailOrPhone: '',
+    email: '',
+    phone: '',
     username: '',
     password: '',
     confirmPassword: ''
@@ -21,21 +23,39 @@ export function Signup() {
   const [passwordStrength, setPasswordStrength] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [isd, setIsd] = useState(getDefaultISD())
+  const [method, setMethod] = useState('email') // 'email' | 'phone'
+  // Uniqueness check states
+  const [checkingUser, setCheckingUser] = useState(false)
+  const [usernameUnique, setUsernameUnique] = useState(null) // null | true | false
+  const [checkingContact, setCheckingContact] = useState(false)
+  const [contactUnique, setContactUnique] = useState(null) // email or phone depending on method
+  const [contactMsg, setContactMsg] = useState('')
+  const [usernameMsg, setUsernameMsg] = useState('')
+  // debounce timers
+  const [timers, setTimers] = useState({ user: null, contact: null })
 
   useEffect(() => {
     document.title = 'ComicStop – Sign Up'
   }, [])
 
   const validateEmail = (email) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(email)
-  const validatePhone = (phone) => (/^[+]?[- ().0-9]{3,}$/).test(phone)
+  const digitsOnly = (value) => String(value || '').replace(/\D+/g, '')
+  const validatePhone = (phone) => {
+    const digits = digitsOnly(phone)
+    return digits.length >= 7 && digits.length <= 15
+  }
 
   const validateForm = () => {
     const newErrors = {}
     if (!formData.username.trim()) newErrors.username = 'Username is required'
-    if (!formData.emailOrPhone.trim()) {
-      newErrors.emailOrPhone = 'Email or phone number is required'
-    } else if (!(validateEmail(formData.emailOrPhone) || validatePhone(formData.emailOrPhone))) {
-      newErrors.emailOrPhone = 'Enter a valid email address or phone number'
+    if (method === 'email') {
+      if (!formData.email.trim()) newErrors.email = 'Email is required'
+      else if (!validateEmail(formData.email.trim())) newErrors.email = 'Enter a valid email address'
+    } else {
+      if (!isd) newErrors.phone = 'Select ISD code'
+      if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
+      else if (!validatePhone(formData.phone.trim())) newErrors.phone = 'Enter a valid phone number'
     }
     if (!formData.password.trim()) newErrors.password = 'Password is required'
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters long'
@@ -52,6 +72,15 @@ export function Signup() {
       return
     }
     setFormData(prev => ({ ...prev, [name]: value }))
+    // reset uniqueness state when the related field changes
+    if (name === 'username') {
+      setUsernameUnique(null)
+      setUsernameMsg('')
+    }
+    if (name === 'email' || name === 'phone') {
+      setContactUnique(null)
+      setContactMsg('')
+    }
     if (name === 'password') {
       const hasUpper = /[A-Z]/.test(value)
       const hasLower = /[a-z]/.test(value)
@@ -64,6 +93,84 @@ export function Signup() {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
+  // Local validators for determining if we should fire availability checks
+  const isValidUsername = (u) => u && u.trim().length >= 3
+
+  const checkUsername = () => {
+    const u = formData.username.trim()
+    if (!isValidUsername(u)) {
+      setUsernameUnique(null)
+      setUsernameMsg('')
+      return
+    }
+    setCheckingUser(true)
+    setUsernameMsg('Validating…')
+    checkUsernameAvailability(u)
+      .then(unique => {
+        setUsernameUnique(unique)
+        setUsernameMsg(unique ? 'Username is available' : 'Username is taken')
+      })
+      .catch(() => {
+        setUsernameUnique(null)
+        setUsernameMsg('Could not validate username')
+      })
+      .finally(() => setCheckingUser(false))
+  }
+
+  const checkContact = () => {
+    if (method === 'email') {
+      const email = formData.email.trim()
+      if (!validateEmail(email)) {
+        setContactUnique(null)
+        setContactMsg('')
+        return
+      }
+      setCheckingContact(true)
+      setContactMsg('Validating…')
+      checkEmailAvailability(email)
+        .then(unique => {
+          setContactUnique(unique)
+          setContactMsg(unique ? 'Email is available' : 'Email already in use')
+        })
+        .catch(() => {
+          setContactUnique(null)
+          setContactMsg('Could not validate email')
+        })
+        .finally(() => setCheckingContact(false))
+    } else {
+      const phoneDigits = digitsOnly(formData.phone)
+      if (!validatePhone(phoneDigits)) {
+        setContactUnique(null)
+        setContactMsg('')
+        return
+      }
+      setCheckingContact(true)
+      setContactMsg('Validating…')
+      checkPhoneAvailability({ isd_code: isd, phone: phoneDigits })
+        .then(unique => {
+          setContactUnique(unique)
+          setContactMsg(unique ? 'Phone number is available' : 'Phone already in use')
+        })
+        .catch(() => {
+          setContactUnique(null)
+          setContactMsg('Could not validate phone')
+        })
+        .finally(() => setCheckingContact(false))
+    }
+  }
+
+  const onBlurUsername = () => {
+    if (timers.user) clearTimeout(timers.user)
+    const id = setTimeout(checkUsername, 200)
+    setTimers(prev => ({ ...prev, user: id }))
+  }
+
+  const onBlurContact = () => {
+    if (timers.contact) clearTimeout(timers.contact)
+    const id = setTimeout(checkContact, 200)
+    setTimers(prev => ({ ...prev, contact: id }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setGeneralError('')
@@ -74,12 +181,25 @@ export function Signup() {
     }
     try {
       setLoading(true)
-      await signup({
-        emailOrPhone: formData.emailOrPhone,
-        username: formData.username,
-        password: formData.password,
-        termsAccepted: true,
-      })
+      let payload
+      if (method === 'email') {
+        payload = {
+          email: formData.email.trim(),
+          username: formData.username.trim(),
+          password: formData.password,
+          termsAccepted: true,
+        }
+      } else {
+        const phoneDigits = String(formData.phone).replace(/\D+/g, '')
+        payload = {
+          isd_code: isd,
+          phone_number: phoneDigits,
+          username: formData.username.trim(),
+          password: formData.password,
+          termsAccepted: true,
+        }
+      }
+      await signup(payload)
       navigate('/login', { state: { message: 'Account created successfully! Please log in to continue.' } })
     } catch (error) {
       setGeneralError(error.message || 'Registration failed. Please try again.')
@@ -99,6 +219,88 @@ export function Signup() {
           <form onSubmit={handleSubmit} className={styles.form}>
             {generalError && <div className={styles.errorMessage}>{generalError}</div>}
 
+            <div role="radiogroup" aria-label="Signup method" className={styles.fieldRow}>
+              <label className={styles.inlineLabel}>
+                <input
+                  type="radio"
+                  name="method"
+                  value="email"
+                  checked={method === 'email'}
+                  onChange={() => setMethod('email')}
+                  disabled={loading}
+                />
+                Sign up with Email
+              </label>
+              <label className={styles.inlineLabel}>
+                <input
+                  type="radio"
+                  name="method"
+                  value="phone"
+                  checked={method === 'phone'}
+                  onChange={() => setMethod('phone')}
+                  disabled={loading}
+                />
+                Sign up with Phone Number
+              </label>
+            </div>
+
+            {method === 'email' ? (
+              <div className={styles.formGroup}>
+                <label htmlFor="email" className={styles.label}>Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  onBlur={onBlurContact}
+                  placeholder="you@example.com"
+                  className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                  disabled={loading}
+                />
+                {errors.email && <span className={styles.fieldError}>{errors.email}</span>}
+                {!!contactMsg && (
+                  <span className={styles.helperMsg} aria-live="polite">
+                    {contactMsg}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className={styles.formGroup}>
+                <label htmlFor="phone" className={styles.label}>Phone</label>
+                <div className={styles.phoneRow}>
+                  <select
+                    aria-label="ISD code"
+                    className={styles.isdSelect}
+                    value={isd}
+                    onChange={e => setIsd(e.target.value)}
+                    disabled={loading}
+                  >
+                    {ISD_OPTIONS.map(code => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    onBlur={onBlurContact}
+                    placeholder="555 123 4567"
+                    className={`${styles.input} ${errors.phone ? styles.inputError : ''}`}
+                    disabled={loading}
+                  />
+                </div>
+                {errors.phone && <span className={styles.fieldError}>{errors.phone}</span>}
+                {!!contactMsg && (
+                  <span className={styles.helperMsg} aria-live="polite">
+                    {contactMsg}
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className={styles.formGroup}>
               <label htmlFor="username" className={styles.label}>Username</label>
               <input
@@ -107,24 +309,16 @@ export function Signup() {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
+                onBlur={onBlurUsername}
                 className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
                 disabled={loading}
               />
               {errors.username && <span className={styles.fieldError}>{errors.username}</span>}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="emailOrPhone" className={styles.label}>Email or Phone number</label>
-              <input
-                type="text"
-                id="emailOrPhone"
-                name="emailOrPhone"
-                value={formData.emailOrPhone}
-                onChange={handleChange}
-                className={`${styles.input} ${errors.emailOrPhone ? styles.inputError : ''}`}
-                disabled={loading}
-              />
-              {errors.emailOrPhone && <span className={styles.fieldError}>{errors.emailOrPhone}</span>}
+              {!!usernameMsg && (
+                <span className={styles.helperMsg} aria-live="polite">
+                  {usernameMsg}
+                </span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
@@ -206,7 +400,17 @@ export function Signup() {
               </label>
             </div>
 
-            <button type="submit" className={styles.submitButton} disabled={loading}>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={
+                loading ||
+                checkingUser ||
+                checkingContact ||
+                usernameUnique === false ||
+                contactUnique === false
+              }
+            >
               Create account
             </button>
           </form>

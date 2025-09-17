@@ -215,6 +215,7 @@ npm test
 - `PATCH /api/auth/profile/email` - Update email address (normalized lowercase; unique)
 - `PATCH /api/auth/profile/phone` - Update phone (digits-only; unique)
 - `PATCH /api/auth/profile/password` - Update password (must meet strength requirements)
+- `PATCH /api/auth/profile/picture` - Upload or replace the user's profile picture (requires authentication). Send `multipart/form-data` with a single file field named `profilePicture`. On success returns the updated user including `profilePictureS3Url`.
 - `POST /api/auth/logout` - Logout user
 - `POST /api/auth/forgot-password` - Request a password reset (always returns success; in development/test, returns `{ token, expiresAt }` in response data)
 - `POST /api/auth/reset-password` - Reset password using a token
@@ -250,6 +251,19 @@ The API supports the following file types:
 - Images (.jpg, .jpeg, .png)
 
 Maximum file size: 50MB (configurable)
+
+### Profile picture uploads
+
+- Endpoint: `PATCH /api/auth/profile/picture`
+- Auth: Bearer JWT required
+- Content type: `multipart/form-data`
+- Field name: `profilePicture`
+- Allowed types: Common image formats (e.g., .jpg, .jpeg, .png, .gif, .webp)
+- Response: Updated user object including `profilePictureS3Url` and `profilePictureS3Key`
+
+Notes:
+- In local development, AWS credentials are optional if you are not testing uploads. To actually upload profile pictures to S3, configure `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `S3_BUCKET_NAME` in your `.env.local`.
+- In automated tests (`NODE_ENV=test`), S3 operations are stubbed and no real network calls are made.
 
 ## Security Features
 
@@ -303,3 +317,22 @@ npm run lint
 4. Use a secure JWT secret
 5. Configure rate limiting and CORS for production URLs
 6. Set up process manager (PM2, Docker, etc.)
+
+## Data Model Notes
+
+### Comic (`comics` table)
+- Core: `id (uuid)`, `title`, `description`, `author`, `publisher`, `publicationDate`, `genre` (string), `genres` (JSON array), `tags` (JSON array), `rating (0-5)`, `pageCount`.
+- File: `fileName`, `fileType`, `fileSize`, `s3Key` (unique), `s3Url`, optional `filePath` for non‑S3 storage, `thumbnailS3Key`, `thumbnailS3Url`, optional `thumbnailUrl`.
+- Status/visibility: `publishStatus` (draft|scheduled|published|archived), `status` (draft|published), `publishedAt`, `scheduledAt`, `isPublic`, `public` (compat), `ageRestricted`, `isActive`.
+- Commerce: optional `price (decimal)`, `offerOnPrice` (boolean).
+- Analytics: `downloadCount`, `viewCount`.
+- Ordering: `pageOrder` (JSON array).
+- Relations: `uploaderId -> users.id` (required), `seriesId -> series.id` (optional).
+
+### ComicContributor (`comic_contributors` table)
+- Stores contributor groups per comic (e.g., writers, artists).
+- Fields: `id (uuid)`, `comicId -> comics.id`, `role` (string like "writer", "artist"), `contributors` (JSON array of names).
+- Associations: Comic hasMany ComicContributor as `contributors`; ComicContributor belongsTo Comic as `comic`.
+
+Notes:
+- Local dev and tests use Sequelize sync against SQLite. In production, ensure schema is migrated appropriately if you are not using sync/alter.

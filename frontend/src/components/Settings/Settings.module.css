@@ -217,6 +217,15 @@
   color: var(--color-text-secondary);
 }
 
+.avatarImage {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+  display: block;
+}
+
 .infoCol { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .inlineRow { display: flex; gap: 0.5rem; align-items: center; }
@@ -321,4 +330,5 @@
 
   .profileGrid { grid-template-columns: 1fr; }
   .avatar { width: 72px; height: 72px; font-size: 1.5rem; }
+  .avatarImage { width: 72px; height: 72px; }
 }

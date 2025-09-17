@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import { s3Service } from './s3Service.js';
 import { config } from '../config/index.js';
 import { Op } from 'sequelize';
 import crypto from 'crypto';
@@ -12,14 +13,23 @@ export class AuthService {
    * Register a new user
    */
   static async signup(userData) {
-    const { emailOrPhone, username, password } = userData;
+    const { emailOrPhone, email: emailInput, phone_number, username, password } = userData;
 
-    // Determine if emailOrPhone is an email or phone
-    const raw = String(emailOrPhone || '').trim()
-    const asEmail = raw.toLowerCase()
-    const isEmail = /@/.test(asEmail)
-    const email = isEmail ? asEmail : undefined
-    const phone = isEmail ? undefined : raw.replace(/\D+/g, '') || undefined
+    // Determine source of email/phone
+    let email = undefined
+    let phone = undefined
+    if (emailInput) {
+      email = String(emailInput).trim().toLowerCase()
+    } else if (phone_number) {
+      phone = String(phone_number).replace(/\D+/g, '') || undefined
+    } else {
+      // Backward compatibility: emailOrPhone
+      const raw = String(emailOrPhone || '').trim()
+      const asEmail = raw.toLowerCase()
+      const isEmail = /@/.test(asEmail)
+      email = isEmail ? asEmail : undefined
+      phone = isEmail ? undefined : raw.replace(/\D+/g, '') || undefined
+    }
 
     // Normalize for case-insensitive checks
   const emailNorm = email?.trim().toLowerCase();
@@ -327,5 +337,37 @@ export class AuthService {
     if (!user) throw new Error('User not found');
     await user.destroy();
     return true;
+  }
+
+  /**
+   * Update profile picture: uploads to S3 and stores key/url on user
+   */
+  static async updateProfilePicture(userId, file) {
+    if (!file) {
+      const err = new Error('No file uploaded');
+      err.statusCode = 400;
+      throw err;
+    }
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    // Upload new file
+    const result = await s3Service.uploadFile(file, 'profile-pictures');
+
+    // Delete old picture if present (best-effort)
+    if (user.profilePictureS3Key) {
+      try {
+        await s3Service.deleteFile(user.profilePictureS3Key);
+      } catch (e) {
+        console.warn('Failed to delete old profile picture:', e);
+      }
+    }
+
+    await user.update({
+      profilePictureS3Key: result.key,
+      profilePictureS3Url: result.url,
+    });
+
+    return user;
   }
 }

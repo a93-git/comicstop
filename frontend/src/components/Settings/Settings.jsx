@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
-import { getUserSettings, saveUserSettings, setCreatorMode, deleteMyAccount, updateUsername, updateEmail, updatePhone, updatePassword, getUserProfile } from '../../services/api'
+import { getUserSettings, saveUserSettings, setCreatorMode, deleteMyAccount, updateUsername, updateEmail, updatePhone, updatePassword, getUserProfile, updateProfilePicture } from '../../services/api'
 import { useThemeContext } from '../../hooks/useThemeContext'
 import styles from './Settings.module.css'
 
@@ -17,6 +17,35 @@ export function Settings() {
   const [activeEdit, setActiveEdit] = useState(null) // 'username' | 'email' | 'phone' | 'password' | null
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({ username: '', email: '', phone: '', password: '' })
+  const [avatarUploading, setAvatarUploading] = useState(false)
+
+  // Deterministic color from username initial
+  const getAvatarColor = (name) => {
+    const colors = ['#FF6B2C','#10B981','#3B82F6','#F59E0B','#8B5CF6','#EF4444','#14B8A6','#84CC16']
+    if (!name) return colors[0]
+    let hash = 0
+    for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash<<5)-hash)
+    const idx = Math.abs(hash) % colors.length
+    return colors[idx]
+  }
+
+  const onAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      setAvatarUploading(true)
+      const res = await updateProfilePicture(file)
+      if (res.success && res.data?.user) {
+        setProfile(p => ({ ...p, profilePictureS3Url: res.data.user.profilePictureS3Url }))
+      }
+    } catch (err) {
+      setProfileError(err?.message || 'Failed to upload picture')
+    } finally {
+      setAvatarUploading(false)
+      // reset the input so same file can be selected again if needed
+      e.target.value = ''
+    }
+  }
 
   useEffect(() => {
     async function loadSettings() {
@@ -191,9 +220,27 @@ export function Settings() {
             {profileError && <div className={styles.error} role="alert">{profileError}</div>}
             <div className={styles.profileGrid}>
               <div className={styles.avatarCol}>
-                {/* Placeholder avatar using first letter */}
-                <div className={styles.avatar} aria-label="Profile picture">
-                  {(profile?.username?.[0] || 'U').toUpperCase()}
+                {/* Show uploaded image if present, else letter avatar */}
+                { (profile?.profilePictureS3Url) ? (
+                  <img
+                    src={profile.profilePictureS3Url}
+                    alt="Profile"
+                    className={styles.avatarImage}
+                  />
+                ) : (
+                  <div
+                    className={styles.avatar}
+                    aria-label="Profile picture"
+                    style={{ background: getAvatarColor(profile?.username || 'U'), color: '#fff' }}
+                  >
+                    {(profile?.username?.[0] || 'U').toUpperCase()}
+                  </div>
+                )}
+                <div className={styles.inlineRow} style={{ marginTop: '0.5rem' }}>
+                  <label className={styles.secondaryButton} htmlFor="profilePictureInput">
+                    {avatarUploading ? 'Uploading...' : 'Change Picture'}
+                  </label>
+                  <input id="profilePictureInput" type="file" accept="image/*" onChange={onAvatarFileChange} style={{ display: 'none' }} />
                 </div>
               </div>
               <div className={styles.infoCol}>

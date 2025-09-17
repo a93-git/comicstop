@@ -21,6 +21,11 @@ export const Comic = sequelize.define('Comic', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  subtitle: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    validate: { len: [0, 255] },
+  },
   author: {
     type: DataTypes.STRING(255),
     allowNull: true,
@@ -36,6 +41,12 @@ export const Comic = sequelize.define('Comic', {
   genre: {
     type: DataTypes.STRING(100),
     allowNull: true,
+  },
+  genres: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: [],
+    comment: 'Array of genres per spec',
   },
   tags: {
     type: DataTypes.JSON,
@@ -70,6 +81,11 @@ export const Comic = sequelize.define('Comic', {
     type: DataTypes.STRING(50),
     allowNull: false,
   },
+  filePath: {
+    type: DataTypes.STRING(1000),
+    allowNull: true,
+    comment: 'Local or remote file path per spec',
+  },
   s3Key: {
     type: DataTypes.STRING(500),
     allowNull: false,
@@ -88,10 +104,21 @@ export const Comic = sequelize.define('Comic', {
     type: DataTypes.STRING(1000),
     allowNull: true,
   },
+  thumbnailUrl: {
+    type: DataTypes.STRING(1000),
+    allowNull: true,
+    comment: 'Optional non-S3 thumbnail URL',
+  },
   // Publishing and series information
   publishStatus: {
     type: DataTypes.ENUM('draft', 'scheduled', 'published', 'archived'),
     defaultValue: 'draft',
+  },
+  status: {
+    type: DataTypes.ENUM('draft', 'published'),
+    allowNull: false,
+    defaultValue: 'draft',
+    comment: 'Simplified status per spec (separate from publishStatus)',
   },
   publishedAt: {
     type: DataTypes.DATE,
@@ -118,6 +145,23 @@ export const Comic = sequelize.define('Comic', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  ageRestricted: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  public: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+    comment: 'Visibility flag from spec; prefer isPublic in existing code',
+  },
+  price: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+  },
+  offerOnPrice: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
@@ -129,6 +173,12 @@ export const Comic = sequelize.define('Comic', {
   viewCount: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
+  },
+  pageOrder: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: [],
+    comment: 'Ordered list of page image identifiers',
   },
   // Foreign keys
   uploaderId: {

@@ -4,6 +4,7 @@ import comicRoutes from './comics.js';
 import bookmarkRoutes from './bookmarks.js';
 import { seriesRoutes } from './series.js';
 import { creatorProfileRoutes } from './creatorProfile.js';
+import { usersRoutes } from './users.js';
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ router.use('/comics', comicRoutes);
 router.use('/bookmarks', bookmarkRoutes);
 router.use('/series', seriesRoutes);
 router.use('/creator-profile', creatorProfileRoutes);
+router.use('/users', usersRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

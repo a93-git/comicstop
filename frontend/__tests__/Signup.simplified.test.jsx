@@ -20,7 +20,7 @@ describe('Signup simplified form', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'alice' } })
-    fireEvent.change(screen.getByLabelText(/email or phone/i), { target: { value: 'alice@example.com' } })
+    fireEvent.change(screen.getByLabelText(/^email$/i), { target: { value: 'alice@example.com' } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'Password1!' } })
     fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'Password1!' } })
 
@@ -39,7 +39,8 @@ describe('Signup simplified form', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'bob' } })
-    fireEvent.change(screen.getByLabelText(/email or phone/i), { target: { value: 'bob@example.com' } })
+    // Email is default method
+    fireEvent.change(screen.getByLabelText(/^email$/i), { target: { value: 'bob@example.com' } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'Password1!' } })
     fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'Password1!' } })
     fireEvent.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
@@ -48,7 +49,7 @@ describe('Signup simplified form', () => {
 
     // No assertion on navigation; ensure API called with expected payload
     expect(signup).toHaveBeenCalledWith({
-      emailOrPhone: 'bob@example.com',
+      email: 'bob@example.com',
       username: 'bob',
       password: 'Password1!',
       termsAccepted: true,
@@ -65,7 +66,9 @@ describe('Signup simplified form', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'carol' } })
-    fireEvent.change(screen.getByLabelText(/email or phone/i), { target: { value: '+1 (555) 200-3000' } })
+    // Switch to phone method
+    fireEvent.click(screen.getByRole('radio', { name: /sign up with phone number/i }))
+    fireEvent.change(screen.getByLabelText(/^phone$/i), { target: { value: '+1 (555) 200-3000' } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'Password1!' } })
     fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'Password1!' } })
     fireEvent.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
@@ -73,7 +76,8 @@ describe('Signup simplified form', () => {
     fireEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     expect(signup).toHaveBeenCalledWith({
-      emailOrPhone: '+1 (555) 200-3000',
+      isd_code: expect.stringMatching(/^\+[0-9]+$/),
+      phone_number: '15552003000',
       username: 'carol',
       password: 'Password1!',
       termsAccepted: true,

@@ -31,15 +31,27 @@ export const validate = (schema, property = 'body') => {
 
 // Authentication validation schemas
 export const authSchemas = {
-  signup: Joi.object({
-    emailOrPhone: Joi.alternatives().try(
-      Joi.string().email(),
-      Joi.string().pattern(/^[+]?[- ().0-9]{3,}$/)
-    ).required(),
-    username: Joi.string().alphanum().min(3).max(50).required(),
-    password: Joi.string().min(6).max(128).required(),
-    termsAccepted: Joi.boolean().valid(true).required(),
-  }),
+  signup: Joi.alternatives().try(
+    // New shape: either email OR (isd_code + phone_number)
+    Joi.object({
+      email: Joi.string().email(),
+      isd_code: Joi.string().pattern(/^\+[0-9]{1,4}$/),
+      phone_number: Joi.string().pattern(/^[0-9]{7,15}$/),
+      username: Joi.string().alphanum().min(3).max(50).required(),
+      password: Joi.string().min(6).max(128).required(),
+      termsAccepted: Joi.boolean().valid(true).required(),
+    }).xor('email', 'phone_number').with('phone_number', 'isd_code'),
+    // Legacy shape: emailOrPhone
+    Joi.object({
+      emailOrPhone: Joi.alternatives().try(
+        Joi.string().email(),
+        Joi.string().pattern(/^[+]?[- ().0-9]{5,}$/)
+      ).required(),
+      username: Joi.string().alphanum().min(3).max(50).required(),
+      password: Joi.string().min(6).max(128).required(),
+      termsAccepted: Joi.boolean().valid(true).required(),
+    })
+  ),
 
   login: Joi.object({
     // Accept a generic identifier that can be email, username, or phone
@@ -53,7 +65,7 @@ export const authSchemas = {
 
   // Phone-based: request a PIN to be sent to user's registered phone via emailOrPhone or phone
   forgotPasswordPhone: Joi.object({
-    phone: Joi.string().min(3).max(32).required(),
+    phone: Joi.string().pattern(/^[+]?[- ().0-9]{5,}$/).required(),
   }),
 
   resetPassword: Joi.object({
@@ -63,7 +75,7 @@ export const authSchemas = {
 
   // Phone-based: verify PIN and set password
   resetPasswordWithPin: Joi.object({
-    phone: Joi.string().min(3).max(32).required(),
+    phone: Joi.string().pattern(/^[+]?[- ().0-9]{5,}$/).required(),
     pin: Joi.string().min(4).max(12).required(),
     password: Joi.string().min(6).max(128).required(),
   }),
@@ -76,7 +88,7 @@ export const authSchemas = {
     email: Joi.string().email().required(),
   }),
   updatePhone: Joi.object({
-    phone: Joi.string().min(3).max(32).allow(null, '').optional(),
+    phone: Joi.string().pattern(/^[+]?[- ().0-9]{0,32}$/).allow(null, '').optional(),
   }),
   updatePassword: Joi.object({
     password: Joi.string().min(6).max(128).required(),
@@ -86,7 +98,7 @@ export const authSchemas = {
   updateProfileOneOf: Joi.object({
     username: Joi.string().alphanum().min(3).max(50),
     email: Joi.string().email(),
-    phone: Joi.string().min(3).max(32).allow(null, ''),
+    phone: Joi.string().pattern(/^[+]?[- ().0-9]{0,32}$/).allow(null, ''),
     password: Joi.string().min(6).max(128),
   }).xor('username', 'email', 'phone', 'password'),
 };

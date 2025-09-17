@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
+import { useAuth } from '../../context/AuthContext'
 import { login } from '../../services/api'
 import styles from './Login.module.css'
 
 export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { login: setAuthState } = useAuth()
   const [formData, setFormData] = useState({
     identifier: '',
     password: ''
@@ -80,6 +82,10 @@ export function Login() {
         localStorage.setItem('rememberMe', '1')
       } else {
         localStorage.removeItem('rememberMe')
+      }
+      // Immediately update global auth state so Navbar and other components react without a refresh
+      if (result?.user && result?.token) {
+        setAuthState(result.user, result.token)
       }
       // On success, navigate to dashboard
       navigate('/dashboard')

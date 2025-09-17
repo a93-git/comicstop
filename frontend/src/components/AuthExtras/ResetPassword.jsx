@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
 import { resetPasswordWithToken, resetPasswordWithPin } from '../../services/api'
 import styles from './AuthExtras.module.css'
+import { ISD_OPTIONS, getDefaultISD, combineISDWithLocal } from '../../utils/phone'
 
 export function ResetPassword() {
   const [params] = useSearchParams()
@@ -16,6 +17,7 @@ export function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [status, setStatus] = useState({ loading: false, message: '', error: '' })
+  const [isd, setIsd] = useState(getDefaultISD())
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -30,7 +32,8 @@ export function ResetPassword() {
     setStatus({ loading: true, message: '', error: '' })
     try {
       if (via === 'phone') {
-        await resetPasswordWithPin(phone, pin, password)
+        const full = combineISDWithLocal(isd, phone)
+        await resetPasswordWithPin(full, pin, password)
       } else {
         await resetPasswordWithToken(token, password)
       }
@@ -52,15 +55,27 @@ export function ResetPassword() {
             {via === 'phone' && (
               <>
                 <label htmlFor="phone" className={styles.label}>Phone</label>
-                <input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 555 123 4567"
-                  required
-                  className={styles.input}
-                />
+                <div className={styles.phoneRow}>
+                  <select
+                    aria-label="ISD code"
+                    className={styles.isdSelect}
+                    value={isd}
+                    onChange={(e) => setIsd(e.target.value)}
+                  >
+                    {ISD_OPTIONS.map(code => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="555 123 4567"
+                    required
+                    className={styles.input}
+                  />
+                </div>
                 <label htmlFor="pin" className={styles.label}>PIN code</label>
                 <input
                   id="pin"

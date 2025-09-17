@@ -46,6 +46,24 @@
   gap: 0.5rem;
 }
 
+.phoneRow {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.isdSelect {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px var(--spacing-md);
+  border: 1px solid #D1D5DB;
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  font-size: var(--font-base);
+}
+
 .label {
   font-weight: 500;
   color: var(--color-gray900);
@@ -54,6 +72,8 @@
 
 .input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 12px var(--spacing-md);
   border: 1px solid #D1D5DB;
   border-radius: var(--radius-sm);

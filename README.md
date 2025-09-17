@@ -89,11 +89,21 @@ npm run preview
 - Update `frontend/src/config.js` if your ports differ.
 - Auth endpoints are rate limited (login/signup/forgot-password). On exceeding limits, the API returns HTTP 429 with a clear error message which is surfaced in the Login UI.
  - Login button color: The login submit button uses `--color-login-btn` (#FF9B70). Hover and active states use `--color-login-btn-hover` and `--color-login-btn-active` respectively. These are defined in `frontend/src/index.css` and apply in both light and dark themes. Sign Up link styling is unaffected.
+ - Immediate login state: On successful login, the app updates global auth state via `AuthContext.login(user, token)` so Navbar and Settings reflect the logged-in user immediately without a page refresh.
 
 ### Frontend UI consistency
 
 - 404/NotFound page uses the same `Navbar` component without extra padding or margins around it. Spacing is applied only to the page `main` content to match other screens. A visual test (`frontend/__tests__/NotFound.navbar-visual.test.jsx`) guards this structure.
 - Password fields across Login, Signup, and Reset use a consistent structure with a right-aligned, vertically centered visibility toggle. See `frontend/__tests__/PasswordLayout.visual.test.jsx`.
+
+### Profile picture support
+
+- Users have a default avatar derived from their display name: first letter on a deterministic colored background.
+- In Settings → Profile, users can upload a custom profile picture. The UI shows a "Change Picture" button that opens a file picker (accepts images). After upload, the avatar switches to the uploaded image.
+- Backend endpoint: `PATCH /api/auth/profile/picture` expects `multipart/form-data` with field `profilePicture` and returns the updated user including `profilePictureS3Url`.
+- Tests cover both backend upload flow and frontend UI fallback/upload behavior:
+	- Backend: `backend/__tests__/auth.profile-picture.int.test.js`
+	- Frontend: `frontend/__tests__/Settings.avatar.test.jsx`
 
 ### Password reset methods
 
@@ -103,6 +113,21 @@ npm run preview
 - Frontend Forgot Password shows a choice (Email link or Phone PIN). Reset page supports both modes. See tests:
 	- Backend: `backend/__tests__/auth.password-reset-phone.int.test.js`
 	- Frontend: `frontend/__tests__/ForgotReset.dual-methods.test.jsx`
+
+### Signup methods
+
+- Users can sign up using either an email address or a phone number.
+- Frontend provides a radio selection between Email and Phone with an ISD dropdown when Phone is selected. The Email/Phone input appears immediately below the radio group, followed by Username, then Password and Confirm Password fields.
+- Backend accepts either `{ email, username, password, termsAccepted }` or `{ isd_code, phone_number, username, password, termsAccepted }` payloads. The legacy `{ emailOrPhone }` shape remains supported for backward compatibility.
+
+Background uniqueness checks:
+
+- On blur, the Signup form checks if the username and the chosen contact (email or phone) are available.
+- While validating, the UI shows “Validating…”, then either “available” or “already in use/taken”. The Create account button is disabled while checks are in progress or when any required value is not unique.
+- Endpoints used:
+	- GET `/api/users/check-username?username=...` → `{ unique: boolean }`
+	- GET `/api/users/check-email?email=...` → `{ unique: boolean }`
+	- GET `/api/users/check-phone?isd_code=+1&phone=5551234567` → `{ unique: boolean }`
 
 ## Testing
 
@@ -136,6 +161,7 @@ Notes:
 
 - For production, set DB_DIALECT=postgres and provide DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD.
 - AWS S3 values are required for upload features; for local dev you can keep them unset to focus on auth/navigation flows.
+	- To test profile picture uploads end-to-end, set `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `S3_BUCKET_NAME` in `backend/.env.local`. In test mode, S3 operations are stubbed automatically.
 
 Currently, two official plugins are available:
 

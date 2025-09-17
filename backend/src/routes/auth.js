@@ -4,6 +4,7 @@ import { validate, authSchemas } from '../middleware/validation.js';
 import { requireAuth } from '../middleware/auth.js';
 import { loginLimiter, signupLimiter, forgotPasswordLimiter } from '../middleware/rateLimiters.js';
 import { AuthService } from '../services/authService.js';
+import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -344,5 +345,8 @@ router.patch('/profile/password', requireAuth, validate(authSchemas.updatePasswo
 
 // Profile update unified endpoint (exactly one field allowed)
 router.patch('/profile', requireAuth, validate(authSchemas.updateProfileOneOf), AuthController.updateProfileOneOf)
+
+// Profile picture upload
+router.patch('/profile/picture', requireAuth, upload.single('profilePicture'), AuthController.updateProfilePicture)
 
 export default router;

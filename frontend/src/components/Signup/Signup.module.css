@@ -80,6 +80,18 @@
   gap: var(--spacing-md);
 }
 
+.fieldRow {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+.inlineLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -90,6 +102,22 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+}
+
+.phoneRow {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.isdSelect {
+  width: 100%;
+  padding: 12px var(--spacing-md);
+  border: 1px solid #D1D5DB;
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  font-size: var(--font-base);
 }
 
 .label {
@@ -158,6 +186,11 @@
 .fieldError {
   color: #EF4444;
   font-size: var(--font-sm);
+}
+
+.helperMsg {
+  font-size: var(--font-sm);
+  color: var(--color-gray600);
 }
 
 .errorMessage {

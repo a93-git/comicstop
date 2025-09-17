@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { ThemeProvider } from '../src/context/ThemeContext'
+import { AuthProvider } from '../src/context/AuthContext'
 import { Login } from '../src/components/Login/Login'
 
 jest.mock('../src/components/Navbar/Navbar', () => ({ Navbar: () => <div /> }))
@@ -11,9 +13,13 @@ jest.mock('../src/components/Navbar/Navbar', () => ({ Navbar: () => <div /> }))
 describe('Sign In submit button color and isolation', () => {
   const renderLogin = () => {
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </AuthProvider>
+      </ThemeProvider>
     )
   }
 

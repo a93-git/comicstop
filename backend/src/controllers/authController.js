@@ -196,4 +196,12 @@ export class AuthController {
     }
     res.json({ success: true, data: response });
   });
+
+  /**
+   * PATCH /auth/profile/picture
+   */
+  static updateProfilePicture = asyncHandler(async (req, res) => {
+    const user = await AuthService.updateProfilePicture(req.user.id, req.file);
+    res.json({ success: true, data: { user } });
+  });
 }

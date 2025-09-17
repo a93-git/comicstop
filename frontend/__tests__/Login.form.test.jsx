@@ -1,19 +1,29 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { ThemeProvider } from '../src/context/ThemeContext'
+import { AuthProvider } from '../src/context/AuthContext'
 import { Login } from '../src/components/Login/Login'
 
 jest.mock('../src/components/Navbar/Navbar', () => ({ Navbar: () => <div /> }))
 
-jest.mock('../src/services/api', () => ({
-  login: jest.fn().mockResolvedValue({ token: 't', user: { id: 1, username: 'Alice', email: 'alice@example.com' } })
-}))
+jest.mock('../src/services/api', () => {
+  const original = jest.requireActual('../src/services/api')
+  return {
+    ...original,
+    login: jest.fn().mockResolvedValue({ token: 't', user: { id: 1, username: 'Alice', email: 'alice@example.com' } })
+  }
+})
 
 describe('Login form', () => {
   it('submits identifier and password', async () => {
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </AuthProvider>
+      </ThemeProvider>
     )
 
   fireEvent.change(screen.getByLabelText(/email, username, or phone/i), { target: { value: 'alice@example.com' } })
@@ -27,9 +37,13 @@ describe('Login form', () => {
 
   it('renders the Sign In button with submitButton class (orange brand)', async () => {
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </AuthProvider>
+      </ThemeProvider>
     )
 
     const btn = screen.getByRole('button', { name: /sign in/i })

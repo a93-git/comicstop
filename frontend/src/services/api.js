@@ -204,6 +204,9 @@ export async function fetchSectionComics(sectionId) {
 
 /**
  * Authentication functions
+ * signup accepts either legacy { emailOrPhone, ... } or new payloads:
+ * - { email, username, password, termsAccepted }
+ * - { isd_code, phone_number, username, password, termsAccepted }
  */
 export async function signup(userData) {
   try {
@@ -283,6 +286,26 @@ export async function resetPasswordWithPin(phone, pin, password) {
   return res
 }
 
+// Uniqueness checks
+export async function checkEmailAvailability(email) {
+  const params = new URLSearchParams({ email })
+  const res = await apiRequest(`/users/check-email?${params.toString()}`)
+  // Returns: { success, data: { unique: boolean } }
+  return Boolean(res?.data?.unique)
+}
+
+export async function checkUsernameAvailability(username) {
+  const params = new URLSearchParams({ username })
+  const res = await apiRequest(`/users/check-username?${params.toString()}`)
+  return Boolean(res?.data?.unique)
+}
+
+export async function checkPhoneAvailability({ isd_code, phone }) {
+  const params = new URLSearchParams({ isd_code, phone })
+  const res = await apiRequest(`/users/check-phone?${params.toString()}`)
+  return Boolean(res?.data?.unique)
+}
+
 export async function logout() {
   try {
     await apiRequest(config.endpoints.logout, { method: 'POST' })
@@ -330,6 +353,33 @@ export async function updatePhone(phone) {
 export async function updatePassword(password) {
   const res = await apiRequest('/auth/profile/password', { method: 'PATCH', body: JSON.stringify({ password }) })
   return res
+}
+
+// Update profile picture
+export async function updateProfilePicture(file) {
+  const url = `${config.apiBaseUrl}/api/auth/profile/picture`
+  const formData = new FormData()
+  formData.append('profilePicture', file)
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: formData,
+    credentials: 'include',
+  })
+  if (!response.ok) {
+    const text = await response.text()
+    let data
+    try { data = text ? JSON.parse(text) : null } catch { data = null }
+    const message = data?.message || `HTTP error! status: ${response.status}`
+    const err = new Error(message)
+    err.status = response.status
+    throw err
+  }
+  const data = await response.json()
+  if (data.success && data.data?.user) {
+    try { localStorage.setItem('currentUser', JSON.stringify(data.data.user)) } catch {}
+  }
+  return data
 }
 
 export async function getUserSettings() {

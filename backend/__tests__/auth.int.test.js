@@ -72,6 +72,17 @@ describe('Auth API', () => {
     expect(byPhone.body.success).toBe(true)
   })
 
+  it('accepts international phone formats with ISD on signup', async () => {
+    const base = Date.now()
+    const username = `intl${base}`
+    const phoneIntl = '+44 7700 900123'
+    const res = await request(app)
+      .post('/api/auth/signup')
+      .send({ username, emailOrPhone: phoneIntl, password: 'StrongP@ssw0rd!', termsAccepted: true })
+    expect(res.status).toBe(201)
+    expect(res.body.success).toBe(true)
+  })
+
   it('prevents duplicate email/username/phone on signup', async () => {
     const base = `${Date.now()}`
     const email = `dup_${base}@example.com`

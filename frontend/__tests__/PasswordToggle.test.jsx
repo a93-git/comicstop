@@ -1,6 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { Login } from '../src/components/Login/Login'
+import { ThemeProvider } from '../src/context/ThemeContext'
+import { AuthProvider } from '../src/context/AuthContext'
 import { Signup } from '../src/components/Signup/Signup'
 import { ResetPassword } from '../src/components/AuthExtras/ResetPassword'
 
@@ -9,9 +11,13 @@ jest.mock('../src/components/Navbar/Navbar', () => ({ Navbar: () => <div /> }))
 describe('Password visibility toggle', () => {
   it('toggles password visibility on Login page', () => {
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </AuthProvider>
+      </ThemeProvider>
     )
   const input = screen.getByLabelText(/password/i, { selector: 'input' })
   const toggle = screen.getByRole('button', { name: /show password|show/i })

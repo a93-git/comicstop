@@ -4,11 +4,13 @@ import { Series } from './Series.js';
 import { CreatorProfile } from './CreatorProfile.js';
 import { Page, definePageAssociations } from './Page.js';
 import { Bookmark, defineBookmarkAssociations } from './Bookmark.js';
+import { ComicContributor, defineComicContributorAssociations } from './ComicContributor.js';
 
 // Define associations between models
 defineComicAssociations(User);
 definePageAssociations(Comic);
 defineBookmarkAssociations(User);
+defineComicContributorAssociations(Comic);
 
 // Series associations
 Series.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
@@ -28,4 +30,5 @@ export {
   CreatorProfile,
   Page,
   Bookmark,
+  ComicContributor,
 };

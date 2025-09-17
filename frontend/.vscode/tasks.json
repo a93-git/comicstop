@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "frontend: lint",
+			"type": "shell",
+			"command": "npm run lint --silent",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "frontend: build",
+			"type": "shell",
+			"command": "npm run build --silent",
+			"args": [],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "frontend: test",
+			"type": "shell",
+			"command": "npm test --silent --colors",
+			"args": [],
+			"isBackground": false,
+			"group": "test"
+		}
+	]
+}

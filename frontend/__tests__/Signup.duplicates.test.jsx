@@ -24,7 +24,7 @@ describe('Signup duplicates handling (simplified)', () => {
 
     // Fill form
     fireEvent.change(screen.getByLabelText(/^username$/i), { target: { value: 'johndoe' } })
-    fireEvent.change(screen.getByLabelText(/email or phone/i), { target: { value: 'john@example.com' } })
+  fireEvent.change(screen.getByLabelText(/^email$/i), { target: { value: 'john@example.com' } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'StrongP@ssw0rd!' } })
     fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'StrongP@ssw0rd!' } })
     fireEvent.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
@@ -44,7 +44,7 @@ describe('Signup duplicates handling (simplified)', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/^username$/i), { target: { value: 'johndoe' } })
-    fireEvent.change(screen.getByLabelText(/email or phone/i), { target: { value: 'john@example.com' } })
+  fireEvent.change(screen.getByLabelText(/^email$/i), { target: { value: 'john@example.com' } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'StrongP@ssw0rd!' } })
     fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'StrongP@ssw0rd!' } })
     fireEvent.click(screen.getByRole('checkbox', { name: /i agree to the/i }))
@@ -64,7 +64,8 @@ describe('Signup duplicates handling (simplified)', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/^username$/i), { target: { value: 'johndoe' } })
-    fireEvent.change(screen.getByLabelText(/email or phone/i), { target: { value: '+1 555 001 0001' } })
+  fireEvent.click(screen.getByRole('radio', { name: /sign up with phone number/i }))
+  fireEvent.change(screen.getByLabelText(/^phone$/i), { target: { value: '+1 555 001 0001' } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'StrongP@ssw0rd!' } })
     fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'StrongP@ssw0rd!' } })
     fireEvent.click(screen.getByRole('checkbox', { name: /i agree to the/i }))

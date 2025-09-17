@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { Login } from '../src/components/Login/Login'
+import { ThemeProvider } from '../src/context/ThemeContext'
+import { AuthProvider } from '../src/context/AuthContext'
 import { Signup } from '../src/components/Signup/Signup'
 import { ResetPassword } from '../src/components/AuthExtras/ResetPassword'
 
@@ -36,9 +38,13 @@ describe('Password field layout structure', () => {
 
   it('Login password field uses container + toggle classes and structure', () => {
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <MemoryRouter>
+            <Login />
+          </MemoryRouter>
+        </AuthProvider>
+      </ThemeProvider>
     )
     expectPasswordFieldStructure(/^password$/i)
   })

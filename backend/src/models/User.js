@@ -68,6 +68,17 @@ export const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  // Profile picture storage (S3)
+  profilePictureS3Key: {
+    type: DataTypes.STRING(512),
+    allowNull: true,
+    comment: 'S3 key for uploaded profile picture',
+  },
+  profilePictureS3Url: {
+    type: DataTypes.STRING(1024),
+    allowNull: true,
+    comment: 'S3 URL for uploaded profile picture',
+  },
   resetPasswordToken: {
     type: DataTypes.STRING(255),
     allowNull: true,
