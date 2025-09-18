@@ -316,7 +316,7 @@ router.post('/verify-email', requireAuth, async (req, res) => {
 	}
 })
 
-// Enable/disable creator mode
+// Enable/disable creator mode (legacy)
 router.post('/creator-mode', requireAuth, async (req, res) => {
 	try {
 		const { enable } = req.body
@@ -324,6 +324,52 @@ router.post('/creator-mode', requireAuth, async (req, res) => {
 		res.json({ success: true, data: { user } })
 	} catch (e) {
 		res.status(400).json({ success: false, message: e.message })
+	}
+})
+
+// Enable/disable CreatorHub with retention and notifications
+router.post('/creator-hub', requireAuth, async (req, res) => {
+	try {
+		const { enabled } = req.body
+		
+		// Validate enabled parameter
+		if (enabled === undefined) {
+			return res.status(400).json({ 
+				success: false, 
+				message: 'enabled parameter is required' 
+			})
+		}
+		
+		if (typeof enabled !== 'boolean') {
+			return res.status(400).json({ 
+				success: false, 
+				message: 'enabled parameter must be a boolean' 
+			})
+		}
+		
+		const user = await AuthService.setCreatorHub(req.user.id, enabled)
+		res.json({ 
+			success: true, 
+			data: { user },
+			message: enabled ? 'CreatorHub enabled successfully' : 'CreatorHub disabled. Data will be retained for 6 months.'
+		})
+	} catch (e) {
+		res.status(400).json({ success: false, message: e.message })
+	}
+})
+
+// Clean up expired CreatorHub data (admin endpoint)
+router.post('/cleanup-expired-creator-data', requireAuth, async (req, res) => {
+	try {
+		// TODO: Add admin role check here
+		const result = await AuthService.cleanupExpiredCreatorData()
+		res.json({ 
+			success: true, 
+			data: result,
+			message: `Cleaned up ${result.deletedCount} expired creator profiles`
+		})
+	} catch (e) {
+		res.status(500).json({ success: false, message: e.message })
 	}
 })
 

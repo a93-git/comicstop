@@ -254,7 +254,7 @@ export async function login(credentials) {
  * Password reset flow
  */
 export async function requestPasswordReset(email) {
-  const res = await apiRequest('/auth/forgot-password', {
+  const res = await apiRequest('/api/auth/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ email }),
   })
@@ -262,7 +262,7 @@ export async function requestPasswordReset(email) {
 }
 
 export async function resetPasswordWithToken(token, password) {
-  const res = await apiRequest('/auth/reset-password', {
+  const res = await apiRequest('/api/auth/reset-password', {
     method: 'POST',
     body: JSON.stringify({ token, password }),
   })
@@ -271,7 +271,7 @@ export async function resetPasswordWithToken(token, password) {
 
 // Phone-based flows
 export async function requestPasswordResetByPhone(phone) {
-  const res = await apiRequest('/auth/forgot-password/phone', {
+  const res = await apiRequest('/api/auth/forgot-password/phone', {
     method: 'POST',
     body: JSON.stringify({ phone }),
   })
@@ -279,7 +279,7 @@ export async function requestPasswordResetByPhone(phone) {
 }
 
 export async function resetPasswordWithPin(phone, pin, password) {
-  const res = await apiRequest('/auth/reset-password/phone', {
+  const res = await apiRequest('/api/auth/reset-password/phone', {
     method: 'POST',
     body: JSON.stringify({ phone, pin, password }),
   })
@@ -289,20 +289,20 @@ export async function resetPasswordWithPin(phone, pin, password) {
 // Uniqueness checks
 export async function checkEmailAvailability(email) {
   const params = new URLSearchParams({ email })
-  const res = await apiRequest(`/users/check-email?${params.toString()}`)
+  const res = await apiRequest(`/api/users/check-email?${params.toString()}`)
   // Returns: { success, data: { unique: boolean } }
   return Boolean(res?.data?.unique)
 }
 
 export async function checkUsernameAvailability(username) {
   const params = new URLSearchParams({ username })
-  const res = await apiRequest(`/users/check-username?${params.toString()}`)
+  const res = await apiRequest(`/api/users/check-username?${params.toString()}`)
   return Boolean(res?.data?.unique)
 }
 
 export async function checkPhoneAvailability({ isd_code, phone }) {
   const params = new URLSearchParams({ isd_code, phone })
-  const res = await apiRequest(`/users/check-phone?${params.toString()}`)
+  const res = await apiRequest(`/api/users/check-phone?${params.toString()}`)
   return Boolean(res?.data?.unique)
 }
 
@@ -327,7 +327,7 @@ export async function getUserProfile() {
 
 // Profile updates
 export async function updateUsername(username) {
-  const res = await apiRequest('/auth/profile/username', { method: 'PATCH', body: JSON.stringify({ username }) })
+  const res = await apiRequest('/api/auth/profile/username', { method: 'PATCH', body: JSON.stringify({ username }) })
   if (res.success && res.data?.user) {
     localStorage.setItem('currentUser', JSON.stringify(res.data.user))
   }
@@ -335,7 +335,7 @@ export async function updateUsername(username) {
 }
 
 export async function updateEmail(email) {
-  const res = await apiRequest('/auth/profile/email', { method: 'PATCH', body: JSON.stringify({ email }) })
+  const res = await apiRequest('/api/auth/profile/email', { method: 'PATCH', body: JSON.stringify({ email }) })
   if (res.success && res.data?.user) {
     localStorage.setItem('currentUser', JSON.stringify(res.data.user))
   }
@@ -343,7 +343,7 @@ export async function updateEmail(email) {
 }
 
 export async function updatePhone(phone) {
-  const res = await apiRequest('/auth/profile/phone', { method: 'PATCH', body: JSON.stringify({ phone }) })
+  const res = await apiRequest('/api/auth/profile/phone', { method: 'PATCH', body: JSON.stringify({ phone }) })
   if (res.success && res.data?.user) {
     localStorage.setItem('currentUser', JSON.stringify(res.data.user))
   }
@@ -351,7 +351,7 @@ export async function updatePhone(phone) {
 }
 
 export async function updatePassword(password) {
-  const res = await apiRequest('/auth/profile/password', { method: 'PATCH', body: JSON.stringify({ password }) })
+  const res = await apiRequest('/api/auth/profile/password', { method: 'PATCH', body: JSON.stringify({ password }) })
   return res
 }
 
@@ -478,7 +478,7 @@ export function saveUserSettings(partial) {
 }
 
 export async function verifyEmail() {
-  const res = await apiRequest('/auth/verify-email', { method: 'POST' })
+  const res = await apiRequest('/api/auth/verify-email', { method: 'POST' })
   if (res.success && res.data?.user) {
     localStorage.setItem('currentUser', JSON.stringify(res.data.user))
   }
@@ -486,7 +486,15 @@ export async function verifyEmail() {
 }
 
 export async function setCreatorMode(enable = true) {
-  const res = await apiRequest('/auth/creator-mode', { method: 'POST', body: JSON.stringify({ enable }) })
+  const res = await apiRequest('/api/auth/creator-mode', { method: 'POST', body: JSON.stringify({ enable }) })
+  if (res.success && res.data?.user) {
+    localStorage.setItem('currentUser', JSON.stringify(res.data.user))
+  }
+  return res
+}
+
+export async function setCreatorHub(enable = true) {
+  const res = await apiRequest('/api/auth/creator-hub', { method: 'POST', body: JSON.stringify({ enable }) })
   if (res.success && res.data?.user) {
     localStorage.setItem('currentUser', JSON.stringify(res.data.user))
   }
@@ -494,7 +502,7 @@ export async function setCreatorMode(enable = true) {
 }
 
 export async function deleteMyAccount() {
-  const res = await apiRequest('/auth/me', { method: 'DELETE' })
+  const res = await apiRequest('/api/auth/me', { method: 'DELETE' })
   if (res.success) {
     await logout()
   }
@@ -552,6 +560,39 @@ export async function uploadComic(formData) {
   }
 }
 
+// Create comic from previously uploaded file(s)
+export async function createComic(payload, options = {}) {
+  try {
+    const url = `${config.apiBaseUrl}${config.endpoints.comics}`
+    const isMultipart = options.multipart === true || (typeof FormData !== 'undefined' && payload instanceof FormData)
+    const fetchOpts = {
+      method: 'POST',
+      headers: isMultipart ? { ...getAuthHeaders() } : { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: isMultipart ? payload : JSON.stringify(payload),
+      credentials: 'include',
+    }
+    const response = await fetch(url, fetchOpts)
+
+    if (!response.ok) {
+      const text = await response.text()
+      let data
+      try { data = text ? JSON.parse(text) : null } catch { data = null }
+      const message = data?.message || `HTTP error! status: ${response.status}`
+      const err = new Error(message)
+      err.status = response.status
+      err.errors = data?.errors
+      throw err
+    }
+
+    const data = await response.json()
+    if (data?.success) return data.data?.comic || data.data
+    throw new Error(data?.message || 'Create comic failed')
+  } catch (error) {
+    console.error('Create comic failed:', error)
+    throw error
+  }
+}
+
 export async function getMyComics(queryParams = {}) {
   try {
     const params = new URLSearchParams(queryParams)
@@ -569,6 +610,39 @@ export async function getMyComics(queryParams = {}) {
   }
 }
 
+// Update comic (PATCH) for existing drafts or metadata changes
+export async function updateComic(id, payload, options = {}) {
+  try {
+    const url = `${config.apiBaseUrl}${config.endpoints.comics}/${id}`
+    const isMultipart = options.multipart === true || (typeof FormData !== 'undefined' && payload instanceof FormData)
+    const fetchOpts = {
+      method: 'PATCH',
+      headers: isMultipart ? { ...getAuthHeaders() } : { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: isMultipart ? payload : JSON.stringify(payload),
+      credentials: 'include',
+    }
+    const response = await fetch(url, fetchOpts)
+
+    if (!response.ok) {
+      const text = await response.text()
+      let data
+      try { data = text ? JSON.parse(text) : null } catch { data = null }
+      const message = data?.message || `HTTP error! status: ${response.status}`
+      const err = new Error(message)
+      err.status = response.status
+      err.errors = data?.errors
+      throw err
+    }
+
+    const data = await response.json()
+    if (data?.success) return data.data?.comic || data.data
+    throw new Error(data?.message || 'Update comic failed')
+  } catch (error) {
+    console.error('Update comic failed:', error)
+    throw error
+  }
+}
+
 export async function getComicById(id) {
   try {
     const endpoint = config.endpoints.comicById.replace('{id}', id)
@@ -581,6 +655,21 @@ export async function getComicById(id) {
     throw new Error(response.message || 'Failed to get comic')
   } catch (error) {
     console.error('Get comic failed:', error)
+    throw error
+  }
+}
+
+// Get draft preview data for a comic (owner-only, drafts only)
+export async function getDraftPreview(id) {
+  try {
+    const endpoint = config.endpoints.comicById.replace('{id}', id) + '/preview'
+    const response = await apiRequest(endpoint)
+    if (response.success) {
+      return response.data
+    }
+    throw new Error(response.message || 'Failed to get draft preview')
+  } catch (error) {
+    console.error('Get draft preview failed:', error)
     throw error
   }
 }
@@ -849,6 +938,21 @@ export async function getMySeries() {
     throw new Error(data.message || 'Failed to fetch creator series')
   } catch (error) {
     console.error('Get my series failed:', error)
+    throw error
+  }
+}
+
+// Minimal series list for selector: [{ id, name }]
+export async function getMySeriesMinimal() {
+  try {
+    const data = await apiRequest('/api/series?user_id=current')
+    // Backend returns: { success: true, data: [{ id, name }, ...] }
+    if (data?.success && Array.isArray(data.data)) {
+      return data.data
+    }
+    throw new Error(data?.message || 'Failed to fetch minimal series list')
+  } catch (error) {
+    console.error('Get my minimal series failed:', error)
     throw error
   }
 }

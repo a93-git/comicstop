@@ -105,6 +105,52 @@ export const authSchemas = {
 
 // Comic validation schemas
 export const comicSchemas = {
+  create: Joi.object({
+    file_id: Joi.string().min(3).required(),
+    title: Joi.string().min(1).max(255).required(),
+    series_id: Joi.string().guid({ version: 'uuidv4' }).required(),
+    upload_agreement: Joi.boolean().valid(true).required(),
+
+    // Optional metadata
+    subtitle: Joi.string().max(255).optional(),
+    genres: Joi.array().items(Joi.string().max(50)).optional(),
+    tags: Joi.array().items(Joi.string().max(50)).optional(),
+    description: Joi.string().max(5000).optional(),
+  thumbnail_url: Joi.string().uri().max(1000).optional(),
+  // When multipart, field exists as a file (handled by multer) and not part of body
+  thumbnailUpload: Joi.any().optional(),
+    age_restricted: Joi.boolean().optional(),
+    public: Joi.boolean().optional(),
+    price: Joi.number().min(0).precision(2).optional(),
+    offer_on_price: Joi.boolean().optional(),
+    contributors: Joi.alternatives().try(
+      Joi.array().items(
+        Joi.object({
+          role: Joi.string().max(100).required(),
+          names: Joi.array().items(Joi.string().max(255)).min(1).required(),
+        })
+      ),
+      // When multipart, client may send JSON string
+      Joi.string().custom((v, helpers) => {
+        try { const arr = JSON.parse(v); if (!Array.isArray(arr)) throw new Error(''); return arr }
+        catch { return helpers.error('any.invalid') }
+      })
+    ).optional(),
+    page_order: Joi.alternatives().try(
+      Joi.array().items(Joi.string().max(500)),
+      Joi.array().items(Joi.string().max(500)).single(),
+      Joi.string().custom((v, helpers) => {
+        try { const arr = JSON.parse(v); if (!Array.isArray(arr)) throw new Error(''); return arr }
+        catch { return helpers.error('any.invalid') }
+      })
+    ).optional(),
+
+    // Optional file meta (needed for single-file create to satisfy model)
+    file_name: Joi.string().max(255).optional(),
+    file_size: Joi.number().integer().min(1).optional(),
+    file_type: Joi.string().max(100).optional(),
+    s3_url: Joi.string().uri().max(1000).optional(),
+  }),
   upload: Joi.object({
     title: Joi.string().min(1).max(255).required(),
     description: Joi.string().max(2000).optional(),
@@ -120,15 +166,25 @@ export const comicSchemas = {
 
   update: Joi.object({
     title: Joi.string().min(1).max(255).optional(),
-    description: Joi.string().max(2000).optional(),
-    author: Joi.string().max(255).optional(),
-    publisher: Joi.string().max(255).optional(),
-    publicationDate: Joi.date().iso().optional(),
-    genre: Joi.string().max(100).optional(),
-    tags: Joi.array().items(Joi.string().max(50)).max(20).optional(),
-    rating: Joi.number().min(0).max(5).precision(1).optional(),
-    pageCount: Joi.number().integer().min(1).optional(),
-    isPublic: Joi.boolean().optional(),
+    subtitle: Joi.string().max(255).optional(),
+    description: Joi.string().max(5000).optional(),
+    genres: Joi.array().items(Joi.string().max(50)).optional(),
+    tags: Joi.array().items(Joi.string().max(50)).optional(),
+  thumbnail_url: Joi.string().uri().max(1000).optional(),
+  // thumbnailUpload is a file (multer); allow its presence
+  thumbnailUpload: Joi.any().optional(),
+    age_restricted: Joi.boolean().optional(),
+    public: Joi.boolean().optional(),
+    price: Joi.number().min(0).precision(2).optional(),
+    offer_on_price: Joi.boolean().optional(),
+    contributors: Joi.array().items(
+      Joi.object({
+        role: Joi.string().max(100).required(),
+        names: Joi.array().items(Joi.string().max(255)).min(1).required(),
+      })
+    ).optional(),
+    page_order: Joi.array().items(Joi.string().max(500)).optional(),
+    status: Joi.string().valid('draft', 'published').optional(),
   }),
 
   query: Joi.object({
@@ -149,7 +205,13 @@ export const seriesSchemas = {
     title: Joi.string().min(1).max(255).required(),
     description: Joi.string().max(2000).optional(),
     genre: Joi.string().max(100).optional(),
-    tags: Joi.array().items(Joi.string().max(50)).max(20).optional(),
+    tags: Joi.alternatives().try(
+      Joi.array().items(Joi.string().max(50)).max(20),
+      Joi.string().custom((v, helpers) => {
+        try { const arr = JSON.parse(v); if (!Array.isArray(arr)) throw new Error(''); return arr }
+        catch { return helpers.error('any.invalid') }
+      })
+    ).optional(),
     ageRating: Joi.string().valid('G', 'PG', 'PG-13', 'R', 'NC-17').optional(),
     language: Joi.string().max(10).default('en').optional(),
     status: Joi.string().valid('ongoing', 'completed', 'hiatus', 'cancelled').default('ongoing').optional(),
@@ -160,7 +222,13 @@ export const seriesSchemas = {
     title: Joi.string().min(1).max(255).optional(),
     description: Joi.string().max(2000).optional(),
     genre: Joi.string().max(100).optional(),
-    tags: Joi.array().items(Joi.string().max(50)).max(20).optional(),
+    tags: Joi.alternatives().try(
+      Joi.array().items(Joi.string().max(50)).max(20),
+      Joi.string().custom((v, helpers) => {
+        try { const arr = JSON.parse(v); if (!Array.isArray(arr)) throw new Error(''); return arr }
+        catch { return helpers.error('any.invalid') }
+      })
+    ).optional(),
     ageRating: Joi.string().valid('G', 'PG', 'PG-13', 'R', 'NC-17').optional(),
     language: Joi.string().max(10).optional(),
     status: Joi.string().valid('ongoing', 'completed', 'hiatus', 'cancelled').optional(),

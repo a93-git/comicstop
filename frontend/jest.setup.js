@@ -26,3 +26,16 @@ if (!global.TextDecoder) {
   // @ts-ignore
   global.TextDecoder = TextDecoder
 }
+
+// Mock URL.createObjectURL / revokeObjectURL for jsdom (used by FileUpload previews)
+if (!global.URL.createObjectURL) {
+  global.URL.createObjectURL = jest.fn(() => 'blob:mock-url')
+}
+if (!global.URL.revokeObjectURL) {
+  global.URL.revokeObjectURL = jest.fn()
+}
+
+// Provide a no-op alert to avoid jsdom "not implemented" errors in tests that call alert
+if (!global.alert) {
+  global.alert = () => {}
+}

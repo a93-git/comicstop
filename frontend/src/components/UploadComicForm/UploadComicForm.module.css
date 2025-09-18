@@ -1,0 +1,36 @@
+.wrapper { padding: 32px; }
+
+.section { margin-bottom: 28px; }
+.section h2 { margin: 0 0 16px; font-size: 1.25rem; }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.gridTwo { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+.input, .textarea, .select, .file { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+.textarea { min-height: 96px; }
+
+.help { color: #666; font-size: 0.85rem; }
+.error { color: #c0392b; font-size: 0.9rem; margin-top: 6px; }
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.checkboxGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: start; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { background: #f4f4f4; border: 1px solid #e8e8e8; border-radius: 14px; padding: 4px 10px; font-size: 0.85rem; cursor: default; }
+
+.toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 10px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; }
+.toggle input { margin: 0; }
+
+.previewPane { border: 1px dashed #ddd; padding: 12px; border-radius: 8px; background: #fafafa; }
+
+.imageList { display: flex; gap: 8px; overflow-x: auto; padding: 6px 0; }
+.imageItem { border: 1px solid #ddd; border-radius: 6px; padding: 6px; background: #fff; min-width: 120px; text-align: center; }
+.imageItem img { max-width: 100px; max-height: 100px; object-fit: cover; display: block; margin: 0 auto 6px; }
+.dragHint { font-size: 0.8rem; color: #999; }
+
+.actions { display: flex; gap: 10px; margin-top: 16px; }
+.primary { background: #FF6B2C; color: #fff; border: 0; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
+.secondary { background: #333; color: #fff; border: 0; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
+
+@media (min-width: 768px) {
+  .gridTwo { grid-template-columns: repeat(2, 1fr); }
+}

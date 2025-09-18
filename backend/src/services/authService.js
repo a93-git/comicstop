@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
 import { s3Service } from './s3Service.js';
+import { emailService } from './emailService.js';
 import { config } from '../config/index.js';
 import { Op } from 'sequelize';
 import crypto from 'crypto';
@@ -263,6 +264,94 @@ export class AuthService {
     if (!user) throw new Error('User not found');
     await user.update({ isCreator });
     return user;
+  }
+
+  /**
+   * Enable/disable CreatorHub with retention policy
+   */
+  static async setCreatorHub(userId, isEnabled = true) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    const updates = {
+      isCreator: isEnabled, // Legacy compatibility
+      isCreatorEnabled: isEnabled,
+    };
+
+    if (isEnabled) {
+      // Enabling CreatorHub
+      updates.creatorDisabledAt = null; // Clear any previous disable timestamp
+      await user.update(updates);
+      
+      // Send enable notification email
+      if (user.email) {
+        try {
+          await emailService.sendCreatorHubEnabledEmail(user);
+        } catch (error) {
+          console.error('Failed to send CreatorHub enabled email:', error);
+        }
+      }
+    } else {
+      // Disabling CreatorHub
+      updates.creatorDisabledAt = new Date(); // Set disable timestamp for retention
+      await user.update(updates);
+      
+      // Send disable notification email
+      if (user.email) {
+        try {
+          await emailService.sendCreatorHubDisabledEmail(user);
+        } catch (error) {
+          console.error('Failed to send CreatorHub disabled email:', error);
+        }
+      }
+    }
+
+    return user;
+  }
+
+  /**
+   * Clean up expired CreatorHub data (older than 6 months)
+   * This should be called by a scheduled job
+   */
+  static async cleanupExpiredCreatorData() {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    try {
+      // Import CreatorProfile here to avoid circular dependency
+      const { CreatorProfile } = await import('../models/index.js');
+      
+      // Find users whose CreatorHub was disabled more than 6 months ago
+      const expiredUsers = await User.findAll({
+        where: {
+          isCreatorEnabled: false,
+          creatorDisabledAt: {
+            [Op.lt]: sixMonthsAgo
+          }
+        },
+        include: [{
+          model: CreatorProfile,
+          as: 'creatorProfile',
+          required: false
+        }]
+      });
+
+      let deletedCount = 0;
+      for (const user of expiredUsers) {
+        if (user.creatorProfile) {
+          await user.creatorProfile.destroy();
+          deletedCount++;
+        }
+        // Clear the disabled timestamp since we've cleaned up
+        await user.update({ creatorDisabledAt: null });
+      }
+
+      console.log(`Cleaned up ${deletedCount} expired CreatorProfile records`);
+      return { deletedCount, expiredUsers: expiredUsers.length };
+    } catch (error) {
+      console.error('Error during CreatorHub data cleanup:', error);
+      throw error;
+    }
   }
 
   /**

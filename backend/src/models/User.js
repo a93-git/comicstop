@@ -60,6 +60,16 @@ export const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  isCreatorEnabled: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    comment: 'Whether CreatorHub features are currently enabled for this user',
+  },
+  creatorDisabledAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'When CreatorHub was disabled; used for 6-month retention policy',
+  },
   isEmailVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,

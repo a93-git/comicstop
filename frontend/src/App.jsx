@@ -12,10 +12,12 @@ import { Settings } from './components/Settings/Settings'
 import { Terms } from './components/Terms/Terms'
 import { CreatorDashboard } from './components/CreatorDashboard/CreatorDashboard'
 import { CreatorProfile } from './components/CreatorProfile/CreatorProfile'
+import { SeriesEditor } from './components/SeriesEditor/SeriesEditor'
 import { NotFound } from './components/NotFound/NotFound'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { ForgotPassword } from './components/AuthExtras/ForgotPassword'
 import { ResetPassword } from './components/AuthExtras/ResetPassword'
+import { ComicPreview } from './components/ComicPreview/ComicPreview'
 
 export default function App() {
   return (
@@ -33,6 +35,11 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/comic/:id" element={<ComicReader />} />
+            <Route path="/preview/:id" element={
+              <ProtectedRoute requireCreator>
+                <ComicPreview />
+              </ProtectedRoute>
+            } />
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Settings />
@@ -51,6 +58,16 @@ export default function App() {
             <Route path="/creator/profile" element={
               <ProtectedRoute requireCreator>
                 <CreatorProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/creator/series/new" element={
+              <ProtectedRoute requireCreator>
+                <SeriesEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/creator/series/:id" element={
+              <ProtectedRoute requireCreator>
+                <SeriesEditor />
               </ProtectedRoute>
             } />
             {/* 404 */}

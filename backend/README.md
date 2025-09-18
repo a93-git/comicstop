@@ -225,15 +225,21 @@ npm test
 
 ### Comics
 - `POST /api/comics/upload` - Upload a new comic (requires authentication)
+- `POST /api/comics` - Create a comic record from a prior upload (requires authentication)
 - `GET /api/comics` - Get all public comics (with pagination and filtering)
 - `GET /api/comics/my` - Get user's own comics (requires authentication)
 - `GET /api/comics/:id` - Get specific comic by ID (requires authentication)
+- `GET /api/comics/:id/preview` - Get a draft preview for your own draft comic (requires authentication, owner only)
 - `PUT /api/comics/:id` - Update comic metadata (requires authentication, owner only)
+- `PATCH /api/comics/:id` - Partially update metadata or publish (requires authentication, owner only)
 - `DELETE /api/comics/:id` - Delete comic (requires authentication, owner only)
 
 ### Other
 - `GET /api/health` - Health check endpoint
 - `GET /api-docs` - Swagger API documentation
+
+### Series
+- `GET /api/series?user_id=current` - Returns only series created by the authenticated user. Responds with a minimal array of objects, each with `{ id, name }`. Requires auth when `user_id=current`.
 
 ## API Documentation
 
@@ -243,12 +249,10 @@ Once the server is running, visit `http://localhost:3001/api-docs` for interacti
 
 The API supports the following file types:
 - PDF (.pdf)
-- EPUB (.epub)
-- MOBI (.mobi)
 - Comic Book Zip (.cbz)
 - Comic Book RAR (.cbr)
 - ZIP (.zip)
-- Images (.jpg, .jpeg, .png)
+- Images (.jpg, .jpeg, .png, .webp)
 
 Maximum file size: 50MB (configurable)
 
@@ -264,6 +268,51 @@ Maximum file size: 50MB (configurable)
 Notes:
 - In local development, AWS credentials are optional if you are not testing uploads. To actually upload profile pictures to S3, configure `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `S3_BUCKET_NAME` in your `.env.local`.
 - In automated tests (`NODE_ENV=test`), S3 operations are stubbed and no real network calls are made.
+
+### Comic uploads
+
+- Endpoint: `POST /api/comics/upload`
+- Auth: Bearer JWT required
+- Content types:
+	- Single-file: `multipart/form-data` with field `comic` for PDF/CBZ/CBR/ZIP
+	- Multi-image: `multipart/form-data` with repeated field `files` and header `x-upload-multiple: true`
+- Validations: Type whitelist and size limits (default 50MB, configurable via `MAX_FILE_SIZE`)
+- Response:
+	- Single-file: `{ success, data: { comic } }` with S3 key/url and metadata
+	- Multi-image: `{ success, data: { uploadId, pageOrder, uploads } }` where `pageOrder` reflects filename sort (e.g., page-001.jpg ...)
+
+### Create comic from upload (metadata + finalize)
+
+- Endpoint: `POST /api/comics`
+- Auth: Bearer JWT required
+- Content type: `application/json` or `multipart/form-data`
+- Request body (required):
+	- `file_id` (string): Identifier for the uploaded file(s). For single-file uploads, this is the S3 key returned from upload. For multi-image flows, you may pass any non-empty identifier and include `page_order`.
+	- `title` (string)
+	- `series_id` (uuid)
+	- `upload_agreement` (boolean, must be true)
+- Optional fields: `subtitle`, `genres[]`, `tags[]`, `description`, `thumbnail_url`, `age_restricted`, `public`, `price`, `offer_on_price`, `contributors[]`, `page_order[]`, and optional file meta (`file_name`, `file_size`, `file_type`, `s3_url`) for single-file flow.
+	- To upload a cover image, send `multipart/form-data` with a single file field named `thumbnailUpload` (JPG/PNG/WEBP). Other fields may be sent as form fields; arrays can be sent as repeated fields (e.g., `genres[]`) or as JSON strings.
+- Behavior:
+	- Creates a Comic in `draft` status owned by the caller.
+	- For multi-image flow, include `page_order` array (S3 keys from the upload response). The comic stores this ordering.
+	- If `thumbnail_url` is provided, it's stored as-is.
+- Response: `{ success, data: { comic } }` (status 201)
+
+### Draft preview
+
+- Endpoint: `GET /api/comics/:id/preview`
+- Auth: Bearer JWT required (owner only)
+- Behavior: Returns a safe subset of the draft for preview: `id, title, subtitle, description, pageOrder, thumbnailUrl, createdAt, updatedAt`.
+- Errors: 404 if not found or not owner; 400 if comic is not in `draft` status.
+
+### Patch comic metadata / publish
+
+- Endpoint: `PATCH /api/comics/:id`
+- Auth: Bearer JWT required (owner only)
+- Content type: `application/json` or `multipart/form-data` (when replacing cover thumbnail using `thumbnailUpload`)
+- Accepts partial updates to: `title`, `subtitle`, `description`, `genres[]`, `tags[]`, `thumbnail_url`, `age_restricted`, `public`, `price`, `offer_on_price`, `contributors[]`, `page_order[]`, `status`.
+- To publish, send `{ "status": "published" }`. On success, `status` and `publishStatus` become `published` and `publishedAt` is set.
 
 ## Security Features
 

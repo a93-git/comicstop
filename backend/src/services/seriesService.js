@@ -123,6 +123,19 @@ export class SeriesService {
   }
 
   /**
+   * Get current user's series with minimal projection for dropdowns or filters
+   */
+  static async getCreatorSeriesMinimal(creatorId) {
+    const series = await Series.findAll({
+      where: { creatorId, isActive: true },
+      attributes: ['id', ['title', 'name']],
+      order: [['createdAt', 'DESC']],
+    });
+    // Return plain array of { id, name }
+    return series.map(s => ({ id: s.id, name: s.get('name') }));
+  }
+
+  /**
    * Get a specific series by ID
    */
   static async getSeriesById(id, userId = null) {

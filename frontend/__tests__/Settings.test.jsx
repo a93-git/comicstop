@@ -57,9 +57,14 @@ jest.mock('../src/services/api', () => {
     current = { ...current, isCreator: !!enable }
     return { success: true, data: { user: { id: 1, isCreator: !!enable } } }
   })
+  // Align with component which calls setCreatorHub
+  const setCreatorHub = jest.fn(async (enable) => {
+    current = { ...current, isCreator: !!enable }
+    return { success: true, message: enable ? 'CreatorHub enabled' : 'CreatorHub disabled', data: { user: { id: 1, isCreator: !!enable } } }
+  })
   const deleteMyAccount = jest.fn(async () => ({ success: true }))
 
-  return { getUserSettings, saveUserSettings, setCreatorMode, deleteMyAccount }
+  return { getUserSettings, saveUserSettings, setCreatorMode, setCreatorHub, deleteMyAccount }
 })
 
 // Import the mocked module to make assertions on calls
@@ -146,23 +151,24 @@ describe('Settings page', () => {
     expect(screen.getByText(/Creator Mode:/i).nextSibling.textContent).toMatch(/Disabled/i)
 
     // Enable
-    const toggleBtn = screen.getByRole('button', { name: /Enable Creator Mode/i })
+  // Accept either legacy label or new CreatorHub label
+  const toggleBtn = screen.getByRole('button', { name: /Enable (Creator Mode|CreatorHub)/i })
     fireEvent.click(toggleBtn)
 
     // Button shows enabling state, then flips to disable
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Disable Creator Mode/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Disable (Creator Mode|CreatorHub)/i })).toBeInTheDocument()
     })
 
     // Status shows enabled
     expect(screen.getByText(/Creator Mode:/i).nextSibling.textContent).toMatch(/Enabled/i)
 
     // Disable now; confirm should be prompted
-    const disableBtn = screen.getByRole('button', { name: /Disable Creator Mode/i })
+  const disableBtn = screen.getByRole('button', { name: /Disable (Creator Mode|CreatorHub)/i })
     fireEvent.click(disableBtn)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Enable Creator Mode/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Enable (Creator Mode|CreatorHub)/i })).toBeInTheDocument()
     })
 
     expect(screen.getByText(/Creator Mode:/i).nextSibling.textContent).toMatch(/Disabled/i)

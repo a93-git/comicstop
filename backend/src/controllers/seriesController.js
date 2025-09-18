@@ -46,12 +46,15 @@ export class SeriesController {
    */
   static async getSeries(req, res) {
     try {
-      const result = await SeriesService.getSeries(req.query);
+      // New filtering: ?user_id=current -> return only series by current user in a minimal projection
+      if (req.query?.user_id === 'current') {
+        const creatorId = req.user.id;
+        const list = await SeriesService.getCreatorSeriesMinimal(creatorId);
+        return res.json({ success: true, data: list });
+      }
 
-      res.json({
-        success: true,
-        data: result,
-      });
+      const result = await SeriesService.getSeries(req.query);
+      res.json({ success: true, data: result });
     } catch (error) {
       console.error('Get series error:', error);
       res.status(500).json({

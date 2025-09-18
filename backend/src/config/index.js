@@ -41,7 +41,7 @@ export const config = {
   upload: {
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE) || 50 * 1024 * 1024, // 50MB
     allowedFileTypes: process.env.ALLOWED_FILE_TYPES?.split(',') || [
-      'pdf', 'epub', 'mobi', 'cbz', 'cbr', 'zip', 'jpg', 'jpeg', 'png'
+      'pdf', 'cbz', 'cbr', 'zip', 'jpg', 'jpeg', 'png', 'webp'
     ],
   },
   

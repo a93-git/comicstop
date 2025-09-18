@@ -1,37 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
-import { getUserProfile, uploadComic } from '../../services/api'
-import { config } from '../../config'
+import { getUserProfile, getMySeriesMinimal, createComic, updateComic } from '../../services/api'
 import styles from './Upload.module.css'
+import { UploadComicForm } from '../UploadComicForm'
 
 export function Upload() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
-    title: '',
-    genre: [],
-    tags: '',
-    isAdultContent: false,
-    triggerWarnings: [],
-    description: '',
-    files: []
-  })
-  const [errors, setErrors] = useState({})
+  const [mySeriesOptions, setMySeriesOptions] = useState([])
   const [generalError, setGeneralError] = useState('')
+  const [apiFieldErrors, setApiFieldErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
+  const [resetKey, setResetKey] = useState(0)
 
-  // Available options for form
-  const genreOptions = [
-    'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 
-    'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life', 'Superhero', 'Thriller'
-  ]
-
-  const triggerWarningOptions = [
-    'Suicide', 'Overt Violence', 'Sexual Content', 'Self-Harm', 
-    'Religious Sentiments', 'Drug Use', 'Mental Health', 'Death'
-  ]
+  // (Options moved inside UploadComicForm)
 
   // Check authentication on component mount
   useEffect(() => {
@@ -48,6 +32,13 @@ export function Upload() {
 
       try {
         await getUserProfile()
+        // Fetch minimal series list for selector
+        try {
+          const series = await getMySeriesMinimal()
+          setMySeriesOptions(series)
+        } catch (e) {
+          console.warn('Failed to load series list for selector:', e)
+        }
         // User is authenticated, continue
       } catch (error) {
         console.log('User not authenticated:', error)
@@ -62,169 +53,143 @@ export function Upload() {
     checkAuth()
   }, [navigate])
 
-  // Form validation
-  const validateForm = () => {
-    const newErrors = {}
-
-    // Required field validation
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required'
-    }
-
-    if (formData.genre.length === 0) {
-      newErrors.genre = 'Please select at least one genre'
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required'
-    }
-
-    if (formData.files.length === 0) {
-      newErrors.files = 'Please select at least one file to upload'
-    } else {
-      // Validate file types
-      const invalidFiles = formData.files.filter(file => 
-        !config.supportedFileTypes.some(type => 
-          file.name.toLowerCase().endsWith(type.toLowerCase())
-        )
-      )
-      if (invalidFiles.length > 0) {
-        newErrors.files = `Unsupported file types: ${invalidFiles.map(f => f.name).join(', ')}`
-      }
-
-      // Validate file sizes
-      const maxSizeBytes = config.maxUploadSizeMB * 1024 * 1024
-      const oversizedFiles = formData.files.filter(file => file.size > maxSizeBytes)
-      if (oversizedFiles.length > 0) {
-        newErrors.files = `Files too large (max ${config.maxUploadSizeMB}MB): ${oversizedFiles.map(f => f.name).join(', ')}`
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  // Handle form field changes
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    
-    if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
-    
-    // Clear specific field error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
-    }
-  }
-
-  // Handle multi-select changes (genre and trigger warnings)
-  const handleMultiSelectChange = (fieldName, value) => {
-    setFormData(prev => {
-      const currentValues = prev[fieldName]
-      const newValues = currentValues.includes(value)
-        ? currentValues.filter(item => item !== value)
-        : [...currentValues, value]
-      
-      return {
-        ...prev,
-        [fieldName]: newValues
-      }
-    })
-
-    // Clear field error
-    if (errors[fieldName]) {
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: ''
-      }))
-    }
-  }
-
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files)
-    setFormData(prev => ({
-      ...prev,
-      files: selectedFiles
-    }))
-
-    // Clear file error
-    if (errors.files) {
-      setErrors(prev => ({
-        ...prev,
-        files: ''
-      }))
-    }
-  }
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  // Handle form submission (UploadComicForm -> uploadComic API)
+  const handleSubmit = async (formData) => {
     setGeneralError('')
     setSuccessMessage('')
-
-    if (!validateForm()) {
-      return
-    }
-
     setSubmitting(true)
     try {
-      // Prepare form data for upload
-      const uploadFormData = new FormData()
-      
-      // Add text fields
-      uploadFormData.append('title', formData.title)
-      uploadFormData.append('genre', JSON.stringify(formData.genre))
-      uploadFormData.append('tags', formData.tags)
-      uploadFormData.append('isAdultContent', formData.isAdultContent)
-      uploadFormData.append('triggerWarnings', JSON.stringify(formData.triggerWarnings))
-      uploadFormData.append('description', formData.description)
-      
-      // Add files
-      formData.files.forEach((file) => {
-        uploadFormData.append(`files`, file)
-      })
-
-      await uploadComic(uploadFormData)
-      
-      setSuccessMessage('Comic uploaded successfully!')
-      
-      // Reset form
-      setFormData({
-        title: '',
-        genre: [],
-        tags: '',
-        isAdultContent: false,
-        triggerWarnings: [],
-        description: '',
-        files: []
-      })
-
-      // Reset file input
-      const fileInput = document.querySelector('input[type="file"]')
-      if (fileInput) {
-        fileInput.value = ''
+      // Build create payload, using fileRef from FileUpload flow
+      const lastDraftId = (() => { try { return localStorage.getItem('upload:lastDraftId') } catch { return null } })()
+      const isFileThumb = formData.thumbnail?.mode === 'file' && formData.thumbnail?.file
+      if (isFileThumb) {
+        // Multipart for create or patch with thumbnail file
+        const fd = new FormData()
+        fd.append('title', formData.title)
+        fd.append('upload_agreement', 'true')
+        if (formData.seriesId) fd.append('series_id', formData.seriesId)
+        if (formData.description) fd.append('description', formData.description)
+        if (Array.isArray(formData.genre)) formData.genre.forEach(g => fd.append('genres[]', g))
+        const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+        tags.forEach(t => fd.append('tags[]', t))
+        fd.append('age_restricted', String(!!formData.isAdultContent))
+        if (Array.isArray(formData.contributors)) fd.append('contributors', JSON.stringify(formData.contributors))
+        if (formData.fileRef?.file_id) fd.append('file_id', formData.fileRef.file_id)
+        if (Array.isArray(formData.fileRef?.page_order)) formData.fileRef.page_order.forEach(p => fd.append('page_order[]', p))
+        fd.append('thumbnailUpload', formData.thumbnail.file)
+        if (lastDraftId) {
+          fd.append('status', 'published')
+          await updateComic(lastDraftId, fd, { multipart: true })
+        } else {
+          await createComic(fd, { multipart: true })
+        }
+      } else {
+        const payload = {
+          title: formData.title,
+          upload_agreement: true,
+          series_id: formData.seriesId || undefined,
+          description: formData.description,
+          genres: formData.genre,
+          tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+          age_restricted: !!formData.isAdultContent,
+        }
+        if (formData.thumbnail?.mode === 'url' && formData.thumbnail?.url) {
+          payload.thumbnail_url = formData.thumbnail.url
+        }
+        if (Array.isArray(formData.contributors) && formData.contributors.length) {
+          payload.contributors = formData.contributors
+        }
+        if (formData.fileRef?.file_id) {
+          payload.file_id = formData.fileRef.file_id
+        } else if (Array.isArray(formData.fileRef?.page_order)) {
+          payload.page_order = formData.fileRef.page_order
+        }
+        if (lastDraftId) {
+          await updateComic(lastDraftId, { ...payload, status: 'published' })
+        } else {
+          await createComic(payload)
+        }
       }
-
-      // Navigate to dashboard after a short delay
-      setTimeout(() => {
-        navigate('/dashboard')
-      }, 2000)
-
+      setSuccessMessage('Comic uploaded successfully!')
+      // Clear stored draft id after publish
+      try { localStorage.removeItem('upload:lastDraftId') } catch {}
+      // Force reset child form
+      setResetKey((k) => k + 1)
+      // Navigate soon after success
+      setTimeout(() => navigate('/dashboard'), 2000)
     } catch (error) {
       setGeneralError(error.message || 'Upload failed. Please try again.')
+      // Map backend validation errors if provided
+      const fields = {}
+      if (error?.errors && typeof error.errors === 'object') {
+        Object.entries(error.errors).forEach(([k, v]) => { fields[k] = Array.isArray(v) ? v.join(', ') : String(v) })
+      }
+      setApiFieldErrors(fields)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Handle Preview: save as draft and navigate to preview page
+  const handlePreview = async (formData) => {
+    setGeneralError('')
+    setSubmitting(true)
+    try {
+      const isFileThumb = formData.thumbnail?.mode === 'file' && formData.thumbnail?.file
+      let created
+      if (isFileThumb) {
+        const fd = new FormData()
+        fd.append('title', formData.title)
+        fd.append('upload_agreement', 'true')
+        if (formData.seriesId) fd.append('series_id', formData.seriesId)
+        if (formData.description) fd.append('description', formData.description)
+        if (Array.isArray(formData.genre)) formData.genre.forEach(g => fd.append('genres[]', g))
+        const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+        tags.forEach(t => fd.append('tags[]', t))
+        fd.append('age_restricted', String(!!formData.isAdultContent))
+        if (Array.isArray(formData.contributors)) fd.append('contributors', JSON.stringify(formData.contributors))
+        if (formData.fileRef?.file_id) fd.append('file_id', formData.fileRef.file_id)
+        if (Array.isArray(formData.fileRef?.page_order)) formData.fileRef.page_order.forEach(p => fd.append('page_order[]', p))
+        if (formData.thumbnail?.file) fd.append('thumbnailUpload', formData.thumbnail.file)
+        created = await createComic(fd, { multipart: true })
+      } else {
+        const payload = {
+          title: formData.title,
+          upload_agreement: true,
+          series_id: formData.seriesId || undefined,
+          description: formData.description,
+          genres: formData.genre,
+          tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+          age_restricted: !!formData.isAdultContent,
+        }
+        if (formData.thumbnail?.mode === 'url' && formData.thumbnail?.url) {
+          payload.thumbnail_url = formData.thumbnail.url
+        }
+        if (Array.isArray(formData.contributors) && formData.contributors.length) {
+          payload.contributors = formData.contributors
+        }
+        if (formData.fileRef?.file_id) {
+          payload.file_id = formData.fileRef.file_id
+        } else if (Array.isArray(formData.fileRef?.page_order)) {
+          payload.page_order = formData.fileRef.page_order
+        }
+        created = await createComic(payload)
+      }
+
+      const draftId = created?.id || created?.comic?.id || created?.data?.comic?.id
+      if (draftId) {
+        try { localStorage.setItem('upload:lastDraftId', String(draftId)) } catch {}
+        navigate(`/preview/${draftId}`)
+      } else {
+        throw new Error('Draft ID missing from response')
+      }
+    } catch (error) {
+      setGeneralError(error.message || 'Preview failed. Please try again.')
+      const fields = {}
+      if (error?.errors && typeof error.errors === 'object') {
+        Object.entries(error.errors).forEach(([k, v]) => { fields[k] = Array.isArray(v) ? v.join(', ') : String(v) })
+      }
+      setApiFieldErrors(fields)
     } finally {
       setSubmitting(false)
     }
@@ -265,154 +230,7 @@ export function Upload() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {/* Title */}
-            <div className={styles.formGroup}>
-              <label htmlFor="title" className={styles.label}>
-                Title *
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className={`${styles.input} ${errors.title ? styles.inputError : ''}`}
-                disabled={submitting}
-                placeholder="Enter comic title"
-              />
-              {errors.title && <span className={styles.fieldError}>{errors.title}</span>}
-            </div>
-
-            {/* Genre */}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Genre(s) *</label>
-              <div className={styles.checkboxGrid}>
-                {genreOptions.map((genre) => (
-                  <label key={genre} className={styles.checkboxItem}>
-                    <input
-                      type="checkbox"
-                      checked={formData.genre.includes(genre)}
-                      onChange={() => handleMultiSelectChange('genre', genre)}
-                      disabled={submitting}
-                    />
-                    <span className={styles.checkboxLabel}>{genre}</span>
-                  </label>
-                ))}
-              </div>
-              {errors.genre && <span className={styles.fieldError}>{errors.genre}</span>}
-            </div>
-
-            {/* Tags */}
-            <div className={styles.formGroup}>
-              <label htmlFor="tags" className={styles.label}>
-                Tags
-              </label>
-              <input
-                type="text"
-                id="tags"
-                name="tags"
-                value={formData.tags}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={submitting}
-                placeholder="Enter tags separated by commas (e.g., hero, adventure, marvel)"
-              />
-              <small className={styles.helpText}>Separate multiple tags with commas</small>
-            </div>
-
-            {/* Age Restriction */}
-            <div className={styles.formGroup}>
-              <label className={styles.checkboxItem}>
-                <input
-                  type="checkbox"
-                  name="isAdultContent"
-                  checked={formData.isAdultContent}
-                  onChange={handleChange}
-                  disabled={submitting}
-                />
-                <span className={styles.checkboxLabel}>18+ Adult Content</span>
-              </label>
-            </div>
-
-            {/* Trigger Warnings */}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Trigger Warnings</label>
-              <div className={styles.checkboxGrid}>
-                {triggerWarningOptions.map((warning) => (
-                  <label key={warning} className={styles.checkboxItem}>
-                    <input
-                      type="checkbox"
-                      checked={formData.triggerWarnings.includes(warning)}
-                      onChange={() => handleMultiSelectChange('triggerWarnings', warning)}
-                      disabled={submitting}
-                    />
-                    <span className={styles.checkboxLabel}>{warning}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className={styles.formGroup}>
-              <label htmlFor="description" className={styles.label}>
-                Description *
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className={`${styles.textarea} ${errors.description ? styles.inputError : ''}`}
-                disabled={submitting}
-                placeholder="Provide a detailed description of your comic..."
-                rows={4}
-              />
-              {errors.description && <span className={styles.fieldError}>{errors.description}</span>}
-            </div>
-
-            {/* File Upload */}
-            <div className={styles.formGroup}>
-              <label htmlFor="files" className={styles.label}>
-                Files *
-              </label>
-              <input
-                type="file"
-                id="files"
-                multiple
-                accept={config.supportedFileTypes.join(',')}
-                onChange={handleFileChange}
-                className={`${styles.fileInput} ${errors.files ? styles.inputError : ''}`}
-                disabled={submitting}
-              />
-              <small className={styles.helpText}>
-                Supported formats: {config.supportedFileTypes.join(', ')} 
-                (Max {config.maxUploadSizeMB}MB per file)
-              </small>
-              {formData.files.length > 0 && (
-                <div className={styles.fileList}>
-                  <p>Selected files:</p>
-                  <ul>
-                    {formData.files.map((file, index) => (
-                      <li key={index}>
-                        {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {errors.files && <span className={styles.fieldError}>{errors.files}</span>}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={submitting}
-            >
-              {submitting ? 'Uploading...' : 'Upload Comic'}
-            </button>
-          </form>
+          <UploadComicForm key={resetKey} onSubmit={handleSubmit} onPreview={handlePreview} loading={submitting} mySeriesOptions={mySeriesOptions} apiErrors={apiFieldErrors} />
         </div>
       </div>
     </div>

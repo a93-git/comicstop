@@ -1,0 +1,20 @@
+.container { min-height: 100vh; background: #fff; }
+.content { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.back { background: transparent; border: none; color: #FF6B2C; cursor: pointer; font-weight: 600; }
+.loading { padding: 24px; }
+.error { color: #c00; background: #fee; border: 1px solid #fcc; padding: 12px; border-radius: 6px; }
+.previewCard { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; }
+.topRow { display: flex; gap: 16px; }
+.thumbBox { width: 180px; height: 260px; background: #f4f4f4; border: 1px solid #e3e3e3; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.thumbBox img { width: 100%; height: 100%; object-fit: cover; }
+.thumbPlaceholder { color: #777; font-size: 12px; }
+.meta { flex: 1; min-width: 0; }
+.title { margin: 0 0 4px; font-size: 20px; }
+.subtitle { color: #666; margin-bottom: 8px; }
+.detailsRow { display: flex; gap: 16px; color: #444; margin-bottom: 8px; }
+.description { color: #333; white-space: pre-wrap; }
+.pagesGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
+.pageItem { position: relative; border: 1px solid #eee; border-radius: 6px; overflow: hidden; background: #fff; }
+.pageItem img { width: 100%; height: 180px; object-fit: cover; display: block; background: #f2f2f2; }
+.badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; padding: 2px 6px; border-radius: 999px; }

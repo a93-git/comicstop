@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar/Navbar'
-import { getUserSettings, saveUserSettings, setCreatorMode, deleteMyAccount, updateUsername, updateEmail, updatePhone, updatePassword, getUserProfile, updateProfilePicture } from '../../services/api'
+import { getUserSettings, saveUserSettings, setCreatorHub, deleteMyAccount, updateUsername, updateEmail, updatePhone, updatePassword, getUserProfile, updateProfilePicture, getMyCreatorProfile, updateCreatorProfile } from '../../services/api'
 import { useThemeContext } from '../../hooks/useThemeContext'
 import styles from './Settings.module.css'
 
@@ -18,6 +18,21 @@ export function Settings() {
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({ username: '', email: '', phone: '', password: '' })
   const [avatarUploading, setAvatarUploading] = useState(false)
+  
+  // CreatorHub state
+  const [creatorForm, setCreatorForm] = useState({
+    displayName: '',
+    bio: '',
+    websiteUrl: '',
+    socialLinks: {},
+    allowComments: true,
+    moderateComments: false,
+    emailNotifications: true,
+    publicStats: false,
+    acceptDonations: false
+  })
+  const [creatorSaving, setCreatorSaving] = useState(false)
+  const [creatorError, setCreatorError] = useState(null)
 
   // Deterministic color from username initial
   const getAvatarColor = (name) => {
@@ -55,10 +70,15 @@ export function Settings() {
         
         const userSettings = await getUserSettings()
         let userProfile = null
+        let userCreatorProfile = null
         try {
           // getUserProfile may not exist in some test mocks; guard it
           if (typeof getUserProfile === 'function') {
             userProfile = await getUserProfile()
+          }
+          // Load creator profile if user is creator-enabled
+          if (userSettings?.isCreator && typeof getMyCreatorProfile === 'function') {
+            userCreatorProfile = await getMyCreatorProfile()
           }
         } catch {}
         const effectiveProfile = userProfile || {
@@ -80,6 +100,20 @@ export function Settings() {
           phone: effectiveProfile?.phone || '',
           password: '',
         })
+        // Set creator form from loaded profile
+        if (userCreatorProfile) {
+          setCreatorForm({
+            displayName: userCreatorProfile.displayName || '',
+            bio: userCreatorProfile.bio || '',
+            websiteUrl: userCreatorProfile.websiteUrl || '',
+            socialLinks: userCreatorProfile.socialLinks || {},
+            allowComments: userCreatorProfile.allowComments ?? true,
+            moderateComments: userCreatorProfile.moderateComments ?? false,
+            emailNotifications: userCreatorProfile.emailNotifications ?? true,
+            publicStats: userCreatorProfile.publicStats ?? false,
+            acceptDonations: userCreatorProfile.acceptDonations ?? false
+          })
+        }
       } catch (err) {
         setError('Failed to load settings')
         console.error('Error loading settings:', err)
@@ -94,17 +128,58 @@ export function Settings() {
   const handleToggleCreator = async () => {
     if (settings.isCreator) {
       // Confirm before disabling
-      const ok = confirm('Disable Creator Mode? You may lose access to creator features.')
+      const ok = confirm('Disable CreatorHub? Your creator profile and content will be preserved for 6 months, after which they will be permanently deleted. You can re-enable CreatorHub anytime during this period.')
       if (!ok) return
     }
     try {
       setSaving(true)
-      await setCreatorMode(!settings.isCreator)
+      const response = await setCreatorHub(!settings.isCreator)
       const updated = await getUserSettings()
       setSettings(updated)
+      
+      // Show success message
+      if (response.message) {
+        alert(response.message)
+      }
+      
+      // If enabling, load creator profile
+      if (!settings.isCreator) {
+        try {
+          const creatorProfileData = await getMyCreatorProfile()
+          if (creatorProfileData) {
+            setCreatorForm({
+              displayName: creatorProfileData.displayName || '',
+              bio: creatorProfileData.bio || '',
+              websiteUrl: creatorProfileData.websiteUrl || '',
+              socialLinks: creatorProfileData.socialLinks || {},
+              allowComments: creatorProfileData.allowComments ?? true,
+              moderateComments: creatorProfileData.moderateComments ?? false,
+              emailNotifications: creatorProfileData.emailNotifications ?? true,
+              publicStats: creatorProfileData.publicStats ?? false,
+              acceptDonations: creatorProfileData.acceptDonations ?? false
+            })
+          }
+        } catch (error) {
+          console.warn('Could not load creator profile:', error)
+        }
+      } else {
+        // If disabling, clear creator data from state
+        setProfile(p => ({ ...p }))
+        setCreatorForm({
+          displayName: '',
+          bio: '',
+          websiteUrl: '',
+          socialLinks: {},
+          allowComments: true,
+          moderateComments: false,
+          emailNotifications: true,
+          publicStats: false,
+          acceptDonations: false
+        })
+      }
     } catch (e) {
       console.error(e)
-      alert('Failed to update creator mode')
+      alert('Failed to update CreatorHub: ' + (e.message || 'Unknown error'))
     } finally {
       setSaving(false)
     }
@@ -165,6 +240,30 @@ export function Settings() {
     }
   }
 
+  const handleSaveCreatorProfile = async () => {
+    try {
+      setCreatorSaving(true)
+      setCreatorError(null)
+      
+      const formData = new FormData()
+      Object.keys(creatorForm).forEach(key => {
+        if (key === 'socialLinks') {
+          formData.append(key, JSON.stringify(creatorForm[key]))
+        } else {
+          formData.append(key, creatorForm[key])
+        }
+      })
+      
+      const updatedProfile = await updateCreatorProfile(formData)
+      setCreatorProfile(updatedProfile)
+      alert('Creator profile updated successfully!')
+    } catch (e) {
+      setCreatorError(e?.message || 'Failed to update creator profile')
+    } finally {
+      setCreatorSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div>
@@ -208,6 +307,7 @@ export function Settings() {
           <nav className={styles.sidebar} aria-label="Settings sections">
             <a href="#profile" className={styles.sidebarLink}>Profile</a>
             <a href="#account-status" className={styles.sidebarLink}>Account Status</a>
+            {settings.isCreator && <a href="#creator-hub" className={styles.sidebarLink}>CreatorHub</a>}
             <a href="#theme-section" className={styles.sidebarLink}>Theme</a>
             <a href="#reading-section" className={styles.sidebarLink}>Reading</a>
             <a href="#notifications-section" className={styles.sidebarLink}>Notifications</a>
@@ -321,6 +421,120 @@ export function Settings() {
             </div>
           </div>
 
+          {settings.isCreator && (
+            <div className={styles.section}>
+              <h3 id="creator-hub" className={styles.sectionTitle}>CreatorHub Profile</h3>
+              {creatorError && <div className={styles.error} role="alert">{creatorError}</div>}
+              
+              <div className={styles.settingItem}>
+                <label className={styles.settingLabel} htmlFor="displayName">Display Name</label>
+                <input 
+                  id="displayName" 
+                  className={styles.settingInput} 
+                  value={creatorForm.displayName} 
+                  onChange={(e) => setCreatorForm(f => ({ ...f, displayName: e.target.value }))}
+                  placeholder="Your public creator name"
+                  disabled={creatorSaving}
+                />
+              </div>
+
+              <div className={styles.settingItem}>
+                <label className={styles.settingLabel} htmlFor="bio">Bio</label>
+                <textarea 
+                  id="bio" 
+                  className={styles.settingInput} 
+                  value={creatorForm.bio} 
+                  onChange={(e) => setCreatorForm(f => ({ ...f, bio: e.target.value }))}
+                  placeholder="Tell readers about yourself..."
+                  rows="4"
+                  disabled={creatorSaving}
+                />
+              </div>
+
+              <div className={styles.settingItem}>
+                <label className={styles.settingLabel} htmlFor="websiteUrl">Website URL</label>
+                <input 
+                  id="websiteUrl" 
+                  type="url" 
+                  className={styles.settingInput} 
+                  value={creatorForm.websiteUrl} 
+                  onChange={(e) => setCreatorForm(f => ({ ...f, websiteUrl: e.target.value }))}
+                  placeholder="https://yourwebsite.com"
+                  disabled={creatorSaving}
+                />
+              </div>
+
+              <div className={styles.settingItem}>
+                <h4 className={styles.settingLabel}>Creator Preferences</h4>
+                
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    className={styles.checkbox}
+                    checked={creatorForm.allowComments}
+                    onChange={(e) => setCreatorForm(f => ({ ...f, allowComments: e.target.checked }))}
+                    disabled={creatorSaving}
+                  />
+                  Allow comments on my comics
+                </label>
+
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    className={styles.checkbox}
+                    checked={creatorForm.moderateComments}
+                    onChange={(e) => setCreatorForm(f => ({ ...f, moderateComments: e.target.checked }))}
+                    disabled={creatorSaving}
+                  />
+                  Moderate comments before publishing
+                </label>
+
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    className={styles.checkbox}
+                    checked={creatorForm.emailNotifications}
+                    onChange={(e) => setCreatorForm(f => ({ ...f, emailNotifications: e.target.checked }))}
+                    disabled={creatorSaving}
+                  />
+                  Receive email notifications for creator activity
+                </label>
+
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    className={styles.checkbox}
+                    checked={creatorForm.publicStats}
+                    onChange={(e) => setCreatorForm(f => ({ ...f, publicStats: e.target.checked }))}
+                    disabled={creatorSaving}
+                  />
+                  Make my statistics public
+                </label>
+
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    className={styles.checkbox}
+                    checked={creatorForm.acceptDonations}
+                    onChange={(e) => setCreatorForm(f => ({ ...f, acceptDonations: e.target.checked }))}
+                    disabled={creatorSaving}
+                  />
+                  Accept donations from readers
+                </label>
+              </div>
+
+              <div className={styles.settingItem}>
+                <button 
+                  className={styles.primaryButton} 
+                  onClick={handleSaveCreatorProfile}
+                  disabled={creatorSaving}
+                >
+                  {creatorSaving ? 'Saving...' : 'Save Creator Profile'}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className={styles.section}>
             <h3 id="theme-section" className={styles.sectionTitle}>Theme Preferences</h3>
             <div className={styles.settingItem}>
@@ -417,7 +631,7 @@ export function Settings() {
                 onClick={handleToggleCreator}
                 disabled={saving}
               >
-                {saving ? (settings.isCreator ? 'Disabling...' : 'Enabling...') : (settings.isCreator ? 'Disable Creator Mode' : 'Enable Creator Mode')}
+                {saving ? (settings.isCreator ? 'Disabling...' : 'Enabling...') : (settings.isCreator ? 'Disable CreatorHub' : 'Enable CreatorHub')}
               </button>
               <button 
                 className={styles.dangerButton} 
@@ -427,6 +641,19 @@ export function Settings() {
                 {saving ? 'Deleting...' : 'Delete Account'}
               </button>
             </div>
+            
+            {!settings.isCreator && (
+              <div className={styles.infoBox}>
+                <p>CreatorHub gives you access to:</p>
+                <ul>
+                  <li>Upload and publish comics</li>
+                  <li>Create and manage series</li>
+                  <li>Track analytics and engagement</li>
+                  <li>Customize your creator profile</li>
+                  <li>Manage comments and community</li>
+                </ul>
+              </div>
+            )}
           </div>
           </div>
         </div>

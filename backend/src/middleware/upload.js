@@ -24,7 +24,7 @@ export const upload = multer({
   fileFilter,
   limits: {
     fileSize: config.upload.maxFileSize,
-    files: 1, // Only allow one file at a time
+    files: 50, // Allow up to 50 files for multi-image uploads
   },
 });
 
@@ -32,6 +32,9 @@ export const upload = multer({
  * Middleware to handle file upload errors
  */
 export const handleUploadError = (error, req, res, next) => {
+  // If multer processed successfully, continue
+  if (!error) return next();
+
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({
@@ -54,7 +57,7 @@ export const handleUploadError = (error, req, res, next) => {
   }
   
   // Handle other file filter errors
-  if (error.message.includes('File type')) {
+  if (typeof error.message === 'string' && error.message.includes('File type')) {
     return res.status(400).json({
       success: false,
       message: error.message,

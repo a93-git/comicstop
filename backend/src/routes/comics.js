@@ -162,13 +162,43 @@ const router = express.Router();
  *       413:
  *         description: File too large
  */
-router.post(
-  '/upload',
-  requireAuth,
-  upload.single('comic'),
-  handleUploadError,
+// Prefer multi-files when header indicates, else single. We register two routes to leverage multer parsers.
+router.post('/upload', requireAuth,
+  (req, res, next) => {
+    if (req.headers['x-upload-multiple'] === 'true') {
+      return upload.array('files', 50)(req, res, (err) => handleUploadError(err, req, res, next));
+    }
+    return upload.single('comic')(req, res, (err) => handleUploadError(err, req, res, next));
+  },
   validate(comicSchemas.upload),
   ComicController.upload
+);
+
+// Create comic from uploaded file(s)
+router.post(
+  '/',
+  requireAuth,
+  // Accept optional cover thumbnail file
+  (req, res, next) => upload.single('thumbnailUpload')(req, res, (err) => handleUploadError(err, req, res, next)),
+  validate(comicSchemas.create),
+  ComicController.create
+);
+
+// Update comic metadata or publish
+router.patch(
+  '/:id',
+  requireAuth,
+  // Accept optional cover thumbnail file on patch
+  (req, res, next) => upload.single('thumbnailUpload')(req, res, (err) => handleUploadError(err, req, res, next)),
+  validate(comicSchemas.update),
+  ComicController.patch
+);
+
+// Draft preview
+router.get(
+  '/:id/preview',
+  requireAuth,
+  ComicController.preview
 );
 
 /**
